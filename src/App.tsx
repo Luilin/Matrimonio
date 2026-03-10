@@ -458,9 +458,6 @@ const WeddingApp = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
           >
-            <span className="text-sm uppercase tracking-[0.4em] mb-4 block font-sans font-light">
-              Siete invitati al matrimonio di
-            </span>
             <h1 className="text-7xl md:text-9xl font-script mb-6">
               Vitantonio & Marianna
             </h1>
