@@ -1,0 +1,4 @@
+# .platform/routes.yaml
+"https://{default}/":
+    type: upstream
+    upstream: "wedding-app:http"

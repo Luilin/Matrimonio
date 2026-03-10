@@ -1,0 +1,32 @@
+# .platform.app.yaml
+name: wedding-app
+type: 'nodejs:20'
+
+# The size of the persistent disk for the application (in MB)
+disk: 1024
+
+# The hooks that run at different stages in the lifecycle
+hooks:
+    build: |
+        npm install
+        npm run build
+    deploy: |
+        # Any post-deployment tasks
+
+# The configuration of the application when it is exposed to the web
+web:
+    commands:
+        start: npm start
+    locations:
+        '/':
+            root: 'dist'
+            index: ['index.html']
+            allow: true
+            scripts: true
+            passthrough: true
+
+# Persistent storage for the SQLite database
+mounts:
+    'data':
+        source: local
+        source_path: data

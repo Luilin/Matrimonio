@@ -1,0 +1,5 @@
+{
+  "name": "Il Nostro Matrimonio",
+  "description": "Un sito elegante per l'invito al nostro matrimonio, con dettagli su data, luogo, alloggi e conferma di partecipazione.",
+  "requestFramePermissions": ["geolocation"]
+}
