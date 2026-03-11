@@ -389,20 +389,19 @@ const WeddingApp = () => {
                 }`}
               >
                 {link.name}
-                <span className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                  activeSection === link.href 
-                    ? 'w-full bg-wedding-gold opacity-100' 
-                    : 'w-0 group-hover:w-full bg-current opacity-50'
-                }`} />
               </a>
             ))}
           </div>
 
           {/* Mobile Menu Toggle */}
           <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMenuOpen(!isMenuOpen);
+            }}
             aria-label="Toggle menu"
-            className={`md:hidden p-3 -mr-2 transition-colors rounded-full hover:bg-black/5 ${
+            className={`md:hidden p-3 -mr-2 transition-colors rounded-full hover:bg-black/5 relative z-[60] cursor-pointer ${
               (scrolled || isMenuOpen) ? 'text-wedding-ink' : 'text-white'
             }`}
           >
@@ -415,29 +414,23 @@ const WeddingApp = () => {
           {isMenuOpen && (
             <motion.div
               key="mobile-menu"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="md:hidden bg-white border-b border-wedding-gold/10 overflow-hidden shadow-xl"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden bg-white border-b border-wedding-gold/10 overflow-hidden shadow-2xl absolute top-full left-0 w-full"
             >
-              <div className="flex flex-col p-6 gap-2">
+              <div className="flex flex-col p-6 gap-1">
                 {navLinks.map((link) => (
                   <a
                     key={link.name}
                     href={link.href}
                     onClick={(e) => scrollToSection(e, link.href)}
-                    className={`text-sm uppercase tracking-[0.2em] font-medium py-4 px-2 transition-all duration-300 flex items-center justify-between rounded-xl hover:bg-wedding-gold/5 ${
-                      activeSection === link.href ? 'text-wedding-gold bg-wedding-gold/5' : 'text-wedding-ink/70'
+                    className={`text-sm uppercase tracking-[0.2em] font-medium py-5 px-4 transition-all duration-300 flex items-center justify-between rounded-xl ${
+                      activeSection === link.href ? 'text-wedding-gold bg-wedding-gold/5' : 'text-wedding-ink/70 active:bg-wedding-gold/5'
                     }`}
                   >
                     {link.name}
-                    {activeSection === link.href && (
-                      <motion.div 
-                        layoutId="activeDotMobile"
-                        className="w-1.5 h-1.5 rounded-full bg-wedding-gold"
-                      />
-                    )}
                   </a>
                 ))}
               </div>
