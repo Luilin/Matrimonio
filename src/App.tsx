@@ -361,7 +361,7 @@ const WeddingApp = () => {
       {/* Navigation */}
       <nav 
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-          scrolled ? 'bg-white/90 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'
+          (scrolled || isMenuOpen) ? 'bg-white/95 backdrop-blur-md py-4 shadow-md' : 'bg-transparent py-6'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -369,7 +369,7 @@ const WeddingApp = () => {
             href="#" 
             onClick={(e) => scrollToSection(e, '#')}
             className={`font-script text-3xl transition-colors ${
-              scrolled ? 'text-wedding-gold' : 'text-white'
+              (scrolled || isMenuOpen) ? 'text-wedding-gold' : 'text-white'
             }`}
           >
             V & M
@@ -401,8 +401,9 @@ const WeddingApp = () => {
           {/* Mobile Menu Toggle */}
           <button 
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={`md:hidden p-2 transition-colors ${
-              scrolled ? 'text-wedding-ink' : 'text-white'
+            aria-label="Toggle menu"
+            className={`md:hidden p-3 -mr-2 transition-colors rounded-full hover:bg-black/5 ${
+              (scrolled || isMenuOpen) ? 'text-wedding-ink' : 'text-white'
             }`}
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -413,25 +414,27 @@ const WeddingApp = () => {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
+              key="mobile-menu"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-b border-wedding-gold/10 overflow-hidden"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="md:hidden bg-white border-b border-wedding-gold/10 overflow-hidden shadow-xl"
             >
-              <div className="flex flex-col p-6 gap-6">
+              <div className="flex flex-col p-6 gap-2">
                 {navLinks.map((link) => (
                   <a
                     key={link.name}
                     href={link.href}
                     onClick={(e) => scrollToSection(e, link.href)}
-                    className={`text-sm uppercase tracking-[0.2em] font-medium transition-all duration-300 flex items-center justify-between ${
-                      activeSection === link.href ? 'text-wedding-gold' : 'text-wedding-ink/70'
+                    className={`text-sm uppercase tracking-[0.2em] font-medium py-4 px-2 transition-all duration-300 flex items-center justify-between rounded-xl hover:bg-wedding-gold/5 ${
+                      activeSection === link.href ? 'text-wedding-gold bg-wedding-gold/5' : 'text-wedding-ink/70'
                     }`}
                   >
                     {link.name}
                     {activeSection === link.href && (
                       <motion.div 
-                        layoutId="activeDot"
+                        layoutId="activeDotMobile"
                         className="w-1.5 h-1.5 rounded-full bg-wedding-gold"
                       />
                     )}
