@@ -444,8 +444,9 @@ const WeddingApp = () => {
         <div 
           className="absolute inset-0 z-0 parallax-bg"
           style={{ 
-            backgroundImage: 'url("https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=60&w=1600")',
-            filter: 'brightness(0.7)'
+            backgroundImage: 'url("https://i.postimg.cc/R0rKYnHD/Whats-App-Image-2026-03-12-at-13-48-53.jpg")',
+            filter: 'brightness(0.65)',
+            backgroundPosition: 'center 60%'
           }}
         />
         <div className="relative z-10 text-center text-white px-4">
