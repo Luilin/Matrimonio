@@ -216,8 +216,74 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
+const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: () => void, onLogin: (pass: string) => void }) => {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === 'puglia2026') {
+      onLogin(password);
+      setPassword('');
+      setError(false);
+    } else {
+      setError(true);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-wedding-gold/20"
+      >
+        <div className="text-center mb-8">
+          <LayoutDashboard className="w-12 h-12 text-wedding-gold mx-auto mb-4" />
+          <h3 className="text-3xl font-script text-wedding-gold">Area Riservata</h3>
+          <p className="text-wedding-ink/60 text-sm mt-2">Inserisci la password per accedere alla dashboard</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <input 
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className={`w-full bg-wedding-cream/30 border ${error ? 'border-red-400' : 'border-wedding-gold/30'} rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold transition-all text-center`}
+              autoFocus
+            />
+            {error && <p className="text-red-400 text-[10px] text-center uppercase tracking-widest font-bold">Password Errata</p>}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button 
+              type="submit"
+              className="w-full bg-wedding-gold text-white font-bold py-4 rounded-2xl shadow-lg shadow-wedding-gold/20 hover:bg-wedding-gold/90 transition-all uppercase tracking-widest text-xs"
+            >
+              Accedi
+            </button>
+            <button 
+              type="button"
+              onClick={onClose}
+              className="w-full text-wedding-ink/40 font-bold py-2 text-xs uppercase tracking-widest hover:text-wedding-ink/60 transition-colors"
+            >
+              Annulla
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
 const WeddingApp = () => {
   const [view, setView] = useState<'invitation' | 'dashboard'>('invitation');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [rsvpStatus, setRsvpStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -352,12 +418,21 @@ const WeddingApp = () => {
     }
   };
 
-  if (view === 'dashboard') {
+  if (view === 'dashboard' && isAuthenticated) {
     return <RSVPDashboard onBack={() => setView('invitation')} />;
   }
 
   return (
     <div className="min-h-screen selection:bg-wedding-gold/30">
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onLogin={() => {
+          setIsAuthenticated(true);
+          setIsLoginModalOpen(false);
+          setView('dashboard');
+        }} 
+      />
       {/* Navigation */}
       <nav 
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
@@ -805,14 +880,12 @@ const WeddingApp = () => {
         </div>
       </section>
 
-      <footer className="py-12 text-center border-t border-wedding-gold/10 relative">
-        <p className="font-script text-2xl text-wedding-ink/40">
-          Vitantonio & Marianna • 04.10.2026
-        </p>
-        
+      <footer className="py-12 bg-wedding-cream/50 text-center border-t border-wedding-gold/10">
+        <p className="font-script text-3xl text-wedding-gold mb-4">Vitantonio & Marianna</p>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-wedding-ink/40 mb-8">4 Ottobre 2026 • Varese</p>
         <button 
-          onClick={() => setView('dashboard')}
-          className="mt-8 inline-flex items-center gap-2 text-wedding-gold/30 hover:text-wedding-gold transition-colors uppercase tracking-[0.3em] text-[10px] font-bold"
+          onClick={() => setIsLoginModalOpen(true)}
+          className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-wedding-gold/40 hover:text-wedding-gold transition-colors"
         >
           <LayoutDashboard className="w-3 h-3" />
           Area Riservata
