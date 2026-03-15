@@ -11,17 +11,12 @@ const __dirname = path.dirname(__filename);
 
 const dbPath = process.env.NODE_ENV === "production" 
   ? path.join(__dirname, "data", "wedding.db") 
-  : "wedding.db";
+  : path.join(__dirname, "wedding.db");
 
-// Ensure the directory exists for the database
-if (process.env.NODE_ENV === "production") {
-  const dbDir = path.dirname(dbPath);
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-}
+console.log(`Database path: ${dbPath}`);
 
 const db = new Database(dbPath);
+console.log("Database connected successfully");
 
 // Initialize database
 db.exec(`
@@ -43,18 +38,21 @@ async function startServer() {
 
   // API routes
   app.post("/api/rsvp", (req, res) => {
+    console.log("Received RSVP request:", req.body);
     const { name, guests, attendance, message } = req.body;
     
     if (!name || !attendance) {
+      console.warn("RSVP Validation failed: name or attendance missing");
       return res.status(400).json({ error: "Nome e partecipazione sono richiesti" });
     }
 
     try {
       const stmt = db.prepare("INSERT INTO rsvps (name, guests, attendance, message) VALUES (?, ?, ?, ?)");
-      stmt.run(name, guests || 1, attendance, message || "");
+      const result = stmt.run(name, guests || 1, attendance, message || "");
+      console.log("RSVP saved successfully, ID:", result.lastInsertRowid);
       res.json({ success: true });
     } catch (error) {
-      console.error("RSVP Error:", error);
+      console.error("RSVP Database Error:", error);
       res.status(500).json({ error: "Errore durante il salvataggio della risposta" });
     }
   });

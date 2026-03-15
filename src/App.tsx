@@ -411,9 +411,12 @@ const WeddingApp = () => {
       if (response.ok) {
         setRsvpStatus('success');
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('RSVP submission failed:', errorData);
         setRsvpStatus('error');
       }
     } catch (error) {
+      console.error('RSVP submission error:', error);
       setRsvpStatus('error');
     }
   };
