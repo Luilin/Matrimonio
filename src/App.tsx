@@ -423,9 +423,13 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
       const user = result.user;
       
       // Check if user is admin
-      const adminEmail = 'michelebattaglia.ing@gmail.com';
+      const adminEmails = [
+        'michelebattaglia.ing@gmail.com',
+        'mariannabattaglia14@gmail.com',
+        'loaderweb@gmail.com'
+      ];
       console.log('Tentativo di login per:', user.email);
-      if (user.email?.toLowerCase() === adminEmail.toLowerCase()) {
+      if (user.email && adminEmails.map(e => e.toLowerCase()).includes(user.email.toLowerCase())) {
         onLogin();
       } else {
         console.log('Email non corrispondente all\'admin predefinito, controllo Firestore...');
@@ -626,8 +630,12 @@ const WeddingApp = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      const adminEmail = 'michelebattaglia.ing@gmail.com';
-      if (user && user.email?.toLowerCase() === adminEmail.toLowerCase()) {
+      const adminEmails = [
+        'michelebattaglia.ing@gmail.com',
+        'mariannabattaglia14@gmail.com',
+        'loaderweb@gmail.com'
+      ];
+      if (user && user.email && adminEmails.map(e => e.toLowerCase()).includes(user.email.toLowerCase())) {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
