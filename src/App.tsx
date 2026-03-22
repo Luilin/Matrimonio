@@ -71,6 +71,8 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
   const [editNotes, setEditNotes] = useState<string>('');
   const [editGuestNames, setEditGuestNames] = useState<string[]>([]);
 
+  const [exportOnlyAttending, setExportOnlyAttending] = useState(false);
+
   useEffect(() => {
     const q = query(collection(db, 'rsvps'), orderBy('created_at', 'desc'));
     
@@ -121,7 +123,8 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
   const totalResponses = rsvps.length;
 
   const exportToExcel = () => {
-    const data = rsvps.map(r => ({
+    const filteredRsvps = exportOnlyAttending ? rsvps.filter(r => r.attendance === 'yes') : rsvps;
+    const data = filteredRsvps.map(r => ({
       Nome: r.name,
       Ospiti: r.guests,
       Presenza: r.attendance === 'yes' ? 'Sì' : 'No',
@@ -134,14 +137,17 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Partecipazioni");
-    XLSX.writeFile(wb, "Partecipazioni_Matrimonio.xlsx");
+    const filename = exportOnlyAttending ? "Partecipazioni_Presenti.xlsx" : "Partecipazioni_Tutte.xlsx";
+    XLSX.writeFile(wb, filename);
   };
 
   const exportToPDF = () => {
+    const filteredRsvps = exportOnlyAttending ? rsvps.filter(r => r.attendance === 'yes') : rsvps;
     const doc = new jsPDF();
-    doc.text("Lista Partecipazioni - Vitantonio & Marianna", 14, 15);
+    const title = exportOnlyAttending ? "Lista Presenti - Vitantonio & Marianna" : "Lista Partecipazioni - Vitantonio & Marianna";
+    doc.text(title, 14, 15);
     
-    const tableData = rsvps.map(r => [
+    const tableData = filteredRsvps.map(r => [
       r.name,
       r.guests.toString(),
       r.attendance === 'yes' ? 'Sì' : 'No',
@@ -159,7 +165,8 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
       headStyles: { fillColor: [212, 165, 165] } // wedding-gold color approx
     });
 
-    doc.save("Partecipazioni_Matrimonio.pdf");
+    const filename = exportOnlyAttending ? "Partecipazioni_Presenti.pdf" : "Partecipazioni_Tutte.pdf";
+    doc.save(filename);
   };
 
   return (
@@ -177,7 +184,20 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
             <h1 className="text-4xl md:text-6xl font-script text-wedding-gold">Dashboard Partecipazioni</h1>
           </div>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-wedding-gold/10 shadow-sm">
+              <input 
+                type="checkbox" 
+                id="onlyAttending"
+                checked={exportOnlyAttending}
+                onChange={(e) => setExportOnlyAttending(e.target.checked)}
+                className="w-4 h-4 text-wedding-gold border-wedding-gold/30 rounded focus:ring-wedding-gold"
+              />
+              <label htmlFor="onlyAttending" className="text-xs font-bold text-wedding-ink/60 cursor-pointer uppercase tracking-widest">
+                Solo Presenti
+              </label>
+            </div>
+
             <div className="flex gap-2">
               <button 
                 onClick={exportToExcel}
@@ -411,9 +431,17 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
           await signOut(auth);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError('Errore durante il login. Riprova.');
+      if (err.code === 'auth/popup-blocked') {
+        setError('Il browser ha bloccato il popup. Per favore, abilita i popup per questo sito e riprova.');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError('Login annullato. Riprova.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError('Dominio non autorizzato nelle impostazioni Firebase. Contatta l\'amministratore.');
+      } else {
+        setError('Errore durante il login. Riprova.');
+      }
     } finally {
       setLoading(false);
     }
