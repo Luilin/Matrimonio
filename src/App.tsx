@@ -419,17 +419,21 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
     setLoading(true);
     setError(null);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email.trim(), password);
       const user = result.user;
       
       // Check if user is admin
-      if (user.email === 'loaderweb@gmail.com') {
+      const adminEmail = 'michelebattaglia.ing@gmail.com';
+      console.log('Tentativo di login per:', user.email);
+      if (user.email?.toLowerCase() === adminEmail.toLowerCase()) {
         onLogin();
       } else {
+        console.log('Email non corrispondente all\'admin predefinito, controllo Firestore...');
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists() && userDoc.data().role === 'admin') {
           onLogin();
         } else {
+          console.warn('Accesso negato per UID:', user.uid);
           setError('Accesso negato. Solo gli amministratori possono accedere.');
           await signOut(auth);
         }
@@ -622,7 +626,8 @@ const WeddingApp = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === 'loaderweb@gmail.com') {
+      const adminEmail = 'michelebattaglia.ing@gmail.com';
+      if (user && user.email?.toLowerCase() === adminEmail.toLowerCase()) {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
