@@ -22,41 +22,97 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
-  Route
+  Route,
+  LogOut,
+  Music,
+  Gift
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { db, auth } from './firebase';
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  query, 
+  orderBy, 
+  onSnapshot,
+  Timestamp,
+  doc,
+  getDoc
+} from 'firebase/firestore';
+import { 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  onAuthStateChanged, 
+  signOut,
+  User
+} from 'firebase/auth';
 
 interface RSVP {
-  id: number;
+  id: string;
   name: string;
   guests: number;
+  guestNames: string[];
   attendance: string;
   message: string;
+  song?: string;
+  hasIntolerances?: string;
+  intolerancesDetails?: string;
+  adminNotes?: string;
   created_at: string;
 }
 
 const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNotes, setEditNotes] = useState<string>('');
+  const [editGuestNames, setEditGuestNames] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchRSVPs = async () => {
-      try {
-        const response = await fetch('/api/rsvps');
-        if (response.ok) {
-          const data = await response.json();
-          setRsvps(data);
-        }
-      } catch (error) {
-        console.error('Error fetching RSVPs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRSVPs();
+    const q = query(collection(db, 'rsvps'), orderBy('created_at', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as RSVP[];
+      setRsvps(data);
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching RSVPs:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Sei sicuro di voler eliminare questa partecipazione?')) {
+      try {
+        const { deleteDoc, doc } = await import('firebase/firestore');
+        await deleteDoc(doc(db, 'rsvps', id));
+      } catch (error) {
+        console.error('Error deleting RSVP:', error);
+      }
+    }
+  };
+
+  const handleUpdateRSVP = async (id: string) => {
+    try {
+      const { updateDoc, doc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'rsvps', id), { 
+        adminNotes: editNotes,
+        guestNames: editGuestNames,
+        name: editGuestNames[0] || '' // Update main name if first guest name changed
+      });
+      setEditingId(null);
+    } catch (error) {
+      console.error('Error updating RSVP:', error);
+    }
+  };
 
   const totalAttending = rsvps
     .filter(r => r.attendance === 'yes')
@@ -70,6 +126,8 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
       Ospiti: r.guests,
       Presenza: r.attendance === 'yes' ? 'Sì' : 'No',
       Messaggio: r.message,
+      'Esigenze Alimentari': r.hasIntolerances === 'yes' ? `Sì: ${r.intolerancesDetails}` : 'No',
+      Canzone: r.song || '-',
       Data: new Date(r.created_at).toLocaleDateString('it-IT')
     }));
 
@@ -88,11 +146,13 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
       r.guests.toString(),
       r.attendance === 'yes' ? 'Sì' : 'No',
       r.message || '-',
+      r.hasIntolerances === 'yes' ? `Sì: ${r.intolerancesDetails}` : 'No',
+      r.song || '-',
       new Date(r.created_at).toLocaleDateString('it-IT')
     ]);
 
     autoTable(doc, {
-      head: [['Nome', 'Ospiti', 'Presenza', 'Messaggio', 'Data']],
+      head: [['Nome', 'Ospiti', 'Presenza', 'Messaggio', 'Dieta/Allergie', 'Canzone', 'Data']],
       body: tableData,
       startY: 25,
       styles: { font: 'helvetica', fontSize: 10 },
@@ -178,34 +238,141 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
                   className="bg-white p-6 rounded-3xl shadow-sm border border-wedding-gold/10 flex flex-col md:flex-row md:items-center justify-between gap-6"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-serif font-bold">{rsvp.name}</h3>
-                      <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold ${
-                        rsvp.attendance === 'yes' 
-                          ? 'bg-wedding-sage/10 text-wedding-sage' 
-                          : 'bg-red-50 text-red-500'
-                      }`}>
-                        {rsvp.attendance === 'yes' ? 'Presente' : 'Assente'}
-                      </span>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-xl font-serif font-bold">{rsvp.name}</h3>
+                        <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold ${
+                          rsvp.attendance === 'yes' 
+                            ? 'bg-wedding-sage/10 text-wedding-sage' 
+                            : 'bg-red-50 text-red-500'
+                        }`}>
+                          {rsvp.attendance === 'yes' ? 'Presente' : 'Assente'}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            setEditingId(rsvp.id);
+                            setEditNotes(rsvp.adminNotes || '');
+                            setEditGuestNames(rsvp.guestNames || []);
+                          }}
+                          className="p-2 text-wedding-gold hover:bg-wedding-gold/10 rounded-full transition-colors"
+                          title="Modifica"
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(rsvp.id)}
+                          className="p-2 text-red-400 hover:bg-red-50 rounded-full transition-colors"
+                          title="Elimina"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-wedding-ink/60">
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3 h-3" />
-                        {rsvp.guests} {rsvp.guests === 1 ? 'ospite' : 'ospiti'}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(rsvp.created_at).toLocaleDateString('it-IT')}
-                      </span>
+                    
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-wedding-ink/60">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          {rsvp.guests} {rsvp.guests === 1 ? 'ospite' : 'ospiti'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(rsvp.created_at).toLocaleDateString('it-IT')}
+                        </span>
+                      </div>
+
+                      {rsvp.guestNames && rsvp.guestNames.length > 0 && (
+                        <div className="bg-wedding-cream/30 p-3 rounded-xl border border-wedding-gold/5">
+                          <p className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2">Nomi Partecipanti</p>
+                          <div className="flex flex-wrap gap-2">
+                            {rsvp.guestNames.map((name, idx) => (
+                              <span key={idx} className="bg-white px-3 py-1 rounded-full text-xs border border-wedding-gold/10">
+                                {name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {rsvp.message && (
+                        <div className="bg-wedding-cream/50 p-4 rounded-2xl relative">
+                          <MessageSquare className="w-4 h-4 text-wedding-gold/30 absolute -top-2 -left-2" />
+                          <p className="text-sm italic text-wedding-ink/70">"{rsvp.message}"</p>
+                        </div>
+                      )}
+
+                      {rsvp.hasIntolerances === 'yes' && (
+                        <div className="flex-1 bg-red-50 p-4 rounded-2xl relative">
+                          <Info className="w-4 h-4 text-red-400/30 absolute -top-2 -left-2" />
+                          <p className="text-sm italic text-red-500 font-medium">Dieta/Allergie: {rsvp.intolerancesDetails}</p>
+                        </div>
+                      )}
+
+                      {rsvp.song && (
+                        <div className="bg-wedding-gold/5 p-4 rounded-2xl relative">
+                          <Music className="w-4 h-4 text-wedding-gold/30 absolute -top-2 -left-2" />
+                          <p className="text-sm italic text-wedding-gold font-medium">"{rsvp.song}"</p>
+                        </div>
+                      )}
+
+                      {editingId === rsvp.id ? (
+                        <div className="mt-4 p-6 bg-wedding-cream/20 rounded-2xl border border-wedding-gold/20 space-y-4">
+                          <div>
+                            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2 block font-bold">Nomi Partecipanti</label>
+                            <div className="space-y-2">
+                              {editGuestNames.map((name, idx) => (
+                                <input 
+                                  key={idx}
+                                  type="text"
+                                  value={name}
+                                  onChange={(e) => {
+                                    const newNames = [...editGuestNames];
+                                    newNames[idx] = e.target.value;
+                                    setEditGuestNames(newNames);
+                                  }}
+                                  className="w-full bg-white border border-wedding-gold/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-wedding-gold"
+                                  placeholder={`Ospite ${idx + 1}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2 block font-bold">Note Amministratore</label>
+                            <textarea 
+                              value={editNotes}
+                              onChange={(e) => setEditNotes(e.target.value)}
+                              className="w-full bg-white border border-wedding-gold/20 rounded-xl p-3 text-sm focus:outline-none focus:border-wedding-gold"
+                              rows={3}
+                              placeholder="Aggiungi una nota..."
+                            />
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button 
+                              onClick={() => setEditingId(null)}
+                              className="px-4 py-2 text-xs uppercase tracking-widest text-wedding-ink/40 font-bold"
+                            >
+                              Annulla
+                            </button>
+                            <button 
+                              onClick={() => handleUpdateRSVP(rsvp.id)}
+                              className="px-6 py-2 bg-wedding-gold text-white text-xs uppercase tracking-widest rounded-lg font-bold shadow-sm"
+                            >
+                              Salva Modifiche
+                            </button>
+                          </div>
+                        </div>
+                      ) : rsvp.adminNotes && (
+                        <div className="mt-4 p-4 bg-wedding-gold/5 rounded-2xl border border-dashed border-wedding-gold/20">
+                          <p className="text-[10px] uppercase tracking-widest text-wedding-gold/60 mb-1">Note Amministratore</p>
+                          <p className="text-sm text-wedding-ink/80">{rsvp.adminNotes}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {rsvp.message && (
-                    <div className="flex-1 bg-wedding-cream/50 p-4 rounded-2xl relative">
-                      <MessageSquare className="w-4 h-4 text-wedding-gold/30 absolute -top-2 -left-2" />
-                      <p className="text-sm italic text-wedding-ink/70">"{rsvp.message}"</p>
-                    </div>
-                  )}
                 </motion.div>
               ))
             )}
@@ -216,20 +383,39 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
-const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: () => void, onLogin: (pass: string) => void }) => {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: () => void, onLogin: () => void }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === 'puglia2026') {
-      onLogin(password);
-      setPassword('');
-      setError(false);
-    } else {
-      setError(true);
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if user is admin
+      // loaderweb@gmail.com is hardcoded as admin in rules, but we check here for UI
+      if (user.email === 'loaderweb@gmail.com') {
+        onLogin();
+      } else {
+        // Optional: check Firestore for roles
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists() && userDoc.data().role === 'admin') {
+          onLogin();
+        } else {
+          setError('Accesso negato. Solo gli amministratori possono accedere.');
+          await signOut(auth);
+        }
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Errore durante il login. Riprova.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -243,28 +429,33 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
         <div className="text-center mb-8">
           <LayoutDashboard className="w-12 h-12 text-wedding-gold mx-auto mb-4" />
           <h3 className="text-3xl font-script text-wedding-gold">Area Riservata</h3>
-          <p className="text-wedding-ink/60 text-sm mt-2">Inserisci la password per accedere alla dashboard</p>
+          <p className="text-wedding-ink/60 text-sm mt-2">Accedi con Google per visualizzare la dashboard</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <input 
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className={`w-full bg-wedding-cream/30 border ${error ? 'border-red-400' : 'border-wedding-gold/30'} rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold transition-all text-center`}
-              autoFocus
-            />
-            {error && <p className="text-red-400 text-[10px] text-center uppercase tracking-widest font-bold">Password Errata</p>}
-          </div>
+        <div className="space-y-6">
+          {error && (
+            <div className="bg-red-50 text-red-500 p-4 rounded-2xl text-xs text-center font-bold uppercase tracking-widest">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-col gap-3">
             <button 
-              type="submit"
-              className="w-full bg-wedding-gold text-white font-bold py-4 rounded-2xl shadow-lg shadow-wedding-gold/20 hover:bg-wedding-gold/90 transition-all uppercase tracking-widest text-xs"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full bg-wedding-gold text-white font-bold py-4 rounded-2xl shadow-lg shadow-wedding-gold/20 hover:bg-wedding-gold/90 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2"
             >
-              Accedi
+              {loading ? 'Accesso in corso...' : (
+                <>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.27.81-.57z" />
+                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Accedi con Google
+                </>
+              )}
             </button>
             <button 
               type="button"
@@ -274,7 +465,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
               Annulla
             </button>
           </div>
-        </form>
+        </div>
       </motion.div>
     </div>
   );
@@ -291,8 +482,12 @@ const WeddingApp = () => {
   const [formData, setFormData] = useState({
     name: '',
     guests: 1,
+    guestNames: [''],
     attendance: 'yes',
-    message: ''
+    message: '',
+    song: '',
+    hasIntolerances: 'no',
+    intolerancesDetails: ''
   });
 
   useEffect(() => {
@@ -308,10 +503,11 @@ const WeddingApp = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Storia', href: '#storia' },
     { name: 'Dettagli', href: '#dettagli' },
-    { name: 'Come Arrivare', href: '#arrivare' },
+    { name: 'Suggerimenti', href: '#arrivare' },
     { name: 'Pernottamento', href: '#pernottamento' },
+    { name: 'Musica', href: '#musica' },
+    { name: 'Lista Nozze', href: '#regalo' },
     { name: 'RSVP', href: '#rsvp' },
   ];
 
@@ -375,24 +571,69 @@ const WeddingApp = () => {
     setIsMenuOpen(false);
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.email === 'loaderweb@gmail.com') {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setIsAuthenticated(false);
+    setView('invitation');
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const finalValue = type === 'number' ? parseInt(value, 10) || 0 : value;
+    
+    if (name === 'guests') {
+      const numGuests = parseInt(value, 10) || 1;
+      setFormData(prev => {
+        const newGuestNames = [...prev.guestNames];
+        if (numGuests > prev.guestNames.length) {
+          for (let i = prev.guestNames.length; i < numGuests; i++) {
+            newGuestNames.push('');
+          }
+        } else if (numGuests < prev.guestNames.length) {
+          newGuestNames.splice(numGuests);
+        }
+        return { ...prev, guests: numGuests, guestNames: newGuestNames };
+      });
+    } else {
+      setFormData(prev => ({ ...prev, [name]: finalValue }));
+    }
+  };
+
+  const handleGuestNameChange = (index: number, value: string) => {
+    setFormData(prev => {
+      const newGuestNames = [...prev.guestNames];
+      newGuestNames[index] = value;
+      // Update main name with the first guest name
+      return { 
+        ...prev, 
+        guestNames: newGuestNames,
+        name: index === 0 ? value : prev.name
+      };
+    });
   };
 
   const handleGetDirections = () => {
+    const destination = encodeURIComponent("Masseria Bonelli, SP 116km 10,400, 70015 Noci BA, Italy");
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
-        const destination = encodeURIComponent("Villa Antica del Lago, Via Panoramica, 42, 21020 Varese VA, Italy");
         window.open(`https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${destination}&travelmode=driving`, '_blank');
       }, (error) => {
         console.error("Error getting location:", error);
-        const destination = encodeURIComponent("Villa Antica del Lago, Via Panoramica, 42, 21020 Varese VA, Italy");
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`, '_blank');
       });
     } else {
-      const destination = encodeURIComponent("Villa Antica del Lago, Via Panoramica, 42, 21020 Varese VA, Italy");
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`, '_blank');
     }
   };
@@ -402,21 +643,23 @@ const WeddingApp = () => {
     setRsvpStatus('submitting');
     
     try {
-      const response = await fetch('/api/rsvp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      
-      if (response.ok) {
-        setRsvpStatus('success');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('RSVP submission failed:', errorData);
-        setRsvpStatus('error');
-      }
-    } catch (error) {
+      // Ensure guests is a number
+      const submissionData = {
+        ...formData,
+        guests: Number(formData.guests),
+        created_at: new Date().toISOString()
+      };
+
+      await addDoc(collection(db, 'rsvps'), submissionData);
+      setRsvpStatus('success');
+    } catch (error: any) {
       console.error('RSVP submission error:', error);
+      
+      // Detailed error logging for debugging
+      if (error.code === 'permission-denied') {
+        console.error('Firestore Permission Denied. Check security rules and data types.');
+      }
+      
       setRsvpStatus('error');
     }
   };
@@ -522,7 +765,7 @@ const WeddingApp = () => {
         <div 
           className="absolute inset-0 z-0 parallax-bg"
           style={{ 
-            backgroundImage: 'url("https://i.postimg.cc/R0rKYnHD/Whats-App-Image-2026-03-12-at-13-48-53.jpg")',
+            backgroundImage: 'url("https://i.postimg.cc/5tDsH5Rw/BC685B35-5CE4-4FE7-8398-4B7F22030F6A.png")',
             filter: 'brightness(0.65)',
             backgroundPosition: 'center 60%'
           }}
@@ -538,7 +781,7 @@ const WeddingApp = () => {
             </h1>
             <div className="h-px w-24 bg-white/50 mx-auto mb-6" />
             <p className="text-2xl md:text-3xl font-serif italic tracking-wide">
-              4 Ottobre 2026
+              Domenica, 4 Ottobre 2026
             </p>
           </motion.div>
           
@@ -551,57 +794,6 @@ const WeddingApp = () => {
             <ChevronDown className="animate-bounce w-8 h-8 text-white/70" />
           </motion.div>
         </div>
-      </section>
-
-      {/* Love Story Section */}
-      <section id="storia" className="py-24 px-6 max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <BookHeart className="w-8 h-8 text-wedding-gold mx-auto mb-8" />
-          <h2 className="text-5xl md:text-7xl font-script mb-12 text-wedding-gold">La Nostra Storia</h2>
-
-          <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-wedding-gold/30 before:to-transparent">
-            {/* Timeline Item 1 */}
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-wedding-cream bg-wedding-gold text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                <Heart className="w-4 h-4" />
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-white shadow-sm border border-wedding-gold/10 text-left md:group-odd:text-right">
-                <p className="text-wedding-ink font-bold text-sm tracking-widest uppercase mb-1">Agosto 2018</p>
-                <h4 className="text-2xl font-script mb-2">Il Primo Incontro</h4>
-                <p className="text-wedding-ink/80 text-sm leading-relaxed">Tutto è iniziato per caso, a una festa di amici in comune. Uno sguardo, una risata condivisa, e da quel momento non ci siamo più separati.</p>
-              </div>
-            </div>
-
-            {/* Timeline Item 2 */}
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-wedding-cream bg-wedding-gold text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                <MapPin className="w-4 h-4" />
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-white shadow-sm border border-wedding-gold/10 text-left md:group-odd:text-right">
-                <p className="text-wedding-ink font-bold text-sm tracking-widest uppercase mb-1">Dicembre 2020</p>
-                <h4 className="text-2xl font-script mb-2">Il Primo Viaggio</h4>
-                <p className="text-wedding-ink/80 text-sm leading-relaxed">Parigi sotto la neve. Tra cioccolate calde e lunghe passeggiate sulla Senna, abbiamo capito che la nostra era una storia speciale.</p>
-              </div>
-            </div>
-
-            {/* Timeline Item 3 */}
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-wedding-cream bg-wedding-gold text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-white shadow-sm border border-wedding-gold/10 text-left md:group-odd:text-right">
-                <p className="text-wedding-ink font-bold text-sm tracking-widest uppercase mb-1">Settembre 2024</p>
-                <h4 className="text-2xl font-script mb-2">La Proposta</h4>
-                <p className="text-wedding-ink/80 text-sm leading-relaxed">Al tramonto, nel nostro posto preferito. Un "Sì" emozionato che ha dato inizio a questo nuovo meraviglioso capitolo.</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </section>
 
       {/* Details Section */}
@@ -624,17 +816,17 @@ const WeddingApp = () => {
               </div>
               <p className="text-lg leading-relaxed text-wedding-ink/80">
                 Domenica, 4 Ottobre 2026<br />
-                Cerimonia alle ore 16:30
+                Il rito civile si terrà alle ore 12:00 presso la medesima location
               </p>
               <div className="flex items-center gap-4 text-wedding-gold pt-4">
                 <Clock className="w-6 h-6" />
                 <h3 className="text-xl font-serif font-semibold uppercase tracking-wider">Programma</h3>
               </div>
               <ul className="space-y-2 text-wedding-ink/80">
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 16:30 - Cerimonia Religiosa</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 18:00 - Aperitivo di Benvenuto</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 20:00 - Cena di Gala</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 23:00 - Taglio della Torta & Party</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 12:00 - Cerimonia Civile</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 13:30 - Aperitivo di Benvenuto</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 15:00 - Pranzo di Nozze</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 18:00 - Taglio della Torta & Party</li>
               </ul>
             </div>
 
@@ -645,9 +837,9 @@ const WeddingApp = () => {
                 <h3 className="text-xl font-serif font-semibold uppercase tracking-wider">Dove</h3>
               </div>
               <p className="text-lg leading-relaxed text-wedding-ink/80">
-                <strong>Villa Antica del Lago</strong><br />
-                Via Panoramica, 42<br />
-                21020 Varese (VA), Italia
+                <strong>Masseria Bonelli</strong><br />
+                SP 116km 10,400<br />
+                70015 Noci (BA), Italia
               </p>
               
               {/* Interactive Map */}
@@ -659,15 +851,15 @@ const WeddingApp = () => {
                   scrolling="no" 
                   marginHeight={0} 
                   marginWidth={0} 
-                  src="https://maps.google.com/maps?q=Villa%20Antica%20del%20Lago%2C%20Via%20Panoramica%2C%2042%2C%20Varese&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                  src="https://maps.google.com/maps?q=Masseria%20Bonelli%2C%20SP%20116km%2010%2C400%2C%20Noci&t=&z=15&ie=UTF8&iwloc=&output=embed"
                   className="grayscale hover:grayscale-0 transition-all duration-700"
-                  title="Mappa Villa Antica del Lago"
+                  title="Mappa Masseria Bonelli"
                 ></iframe>
               </div>
 
               <div className="pt-4 flex flex-wrap gap-4">
                 <a 
-                  href="https://www.google.com/maps/dir/?api=1&destination=Villa+Antica+del+Lago,+Via+Panoramica,+42,+21020+Varese+VA,+Italy" 
+                  href="https://www.google.com/maps/dir/?api=1&destination=Masseria+Bonelli,+SP+116km+10,400,+70015+Noci+BA,+Italy" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-wedding-gold hover:text-wedding-gold/70 transition-colors font-medium bg-wedding-gold/5 px-4 py-2 rounded-full"
@@ -698,9 +890,9 @@ const WeddingApp = () => {
             className="text-center mb-16"
           >
             <Car className="w-8 h-8 text-wedding-sage mx-auto mb-6" />
-            <h2 className="text-5xl md:text-6xl font-script mb-4 text-wedding-gold">Come Arrivare</h2>
+            <h2 className="text-5xl md:text-6xl font-script mb-4 text-wedding-gold">Suggerimenti per arrivare</h2>
             <p className="text-wedding-ink/70 max-w-xl mx-auto">
-              La villa è facilmente raggiungibile in auto. È disponibile un ampio parcheggio riservato agli ospiti.
+              La Masseria è facilmente raggiungibile in auto. È disponibile un ampio parcheggio riservato agli ospiti.
             </p>
           </motion.div>
 
@@ -708,13 +900,15 @@ const WeddingApp = () => {
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-wedding-sage/20">
               <h4 className="font-script text-2xl mb-3 text-wedding-gold">In Auto</h4>
               <p className="text-sm text-wedding-ink/80 leading-relaxed">
-                Prendere l'autostrada A8 in direzione Varese, uscire a Buguggiate e seguire le indicazioni per il Lago di Varese. La villa si trova sulla collina sovrastante il lago.
+                La Puglia è ancora più bella da vivere in macchina, quindi per chi viene da fuori consigliamo di avere un mezzo per godersi tutte le sue meraviglie.
+                L’aeroporto più vicino è Bari: da lì potete noleggiare un’auto, oppure arrivare direttamente in macchina da Roma.
               </p>
             </div>
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-wedding-sage/20">
-              <h4 className="font-script text-2xl mb-3 text-wedding-gold">In Treno</h4>
+              <h4 className="font-script text-2xl mb-3 text-wedding-gold">Servizio navetta</h4>
               <p className="text-sm text-wedding-ink/80 leading-relaxed">
-                La stazione più vicina è Varese FS. Dalla stazione è possibile prendere un taxi (circa 15 minuti) o richiedere il servizio navetta organizzato (contattateci per info).
+                Sarà disponibile una navetta per chi parte da Bisceglie, pensata per agevolare il rientro notturno e permettervi di godervi al massimo la giornata. La partenza è prevista da Bisceglie alle ore 10:30, mentre il rientro è programmato tra le 22:00 e le 23:00. 
+                Per favore fateci sapere se interessati al servizio navetta entro il 4 Luglio 2026.
               </p>
             </div>
           </div>
@@ -732,15 +926,40 @@ const WeddingApp = () => {
           <Bed className="w-8 h-8 text-wedding-gold mx-auto mb-6" />
           <h2 className="text-5xl md:text-6xl font-script mb-4 text-wedding-gold">Dove Pernottare</h2>
           <p className="text-wedding-ink/70 max-w-xl mx-auto">
-            Per chi desidera fermarsi per la notte, abbiamo selezionato alcune strutture nelle vicinanze.
+            Per chi desidera fermarsi per la notte o più giorni, abbiamo selezionato alcune strutture nelle vicinanze.
           </p>
         </motion.div>
 
         <div className="space-y-6">
           {[
-            { name: "Grand Hotel Palace", dist: "2km dalla villa", price: "€€€", link: "#", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=60&w=400" },
-            { name: "B&B Il Giardino Segreto", dist: "5km dalla villa", price: "€€", link: "#", img: "https://images.unsplash.com/photo-1582719478250-c89cae4df85b?auto=format&fit=crop&q=60&w=400" },
-            { name: "Hotel Relais del Lago", dist: "1km dalla villa", price: "€€€", link: "#", img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=60&w=400" }
+            { 
+              name: "Masseria La Mandra", 
+              dist: "Noci (BA)", 
+              price: "€€€", 
+              link: "https://www.masserialamandra.it/", 
+              img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=60&w=400" 
+            },
+            { 
+              name: "Trulli Cibellis", 
+              dist: "Noci (BA)", 
+              price: "€€", 
+              link: "https://www.trullicibellis.it/", 
+              img: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=60&w=400" 
+            },
+            { 
+              name: "Airbnb", 
+              dist: "Tra Noci ed Alberobello", 
+              price: "€-€€", 
+              link: "https://www.airbnb.it/s/Noci--BA--Italia/homes", 
+              img: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=60&w=400" 
+            },
+            { 
+              name: "Canto dei grilli", 
+              dist: "Noci (BA)", 
+              price: "€€", 
+              link: "https://www.cantodeigrilli.it/", 
+              img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=60&w=400" 
+            }
           ].map((hotel, i) => (
             <motion.div 
               key={i}
@@ -773,6 +992,72 @@ const WeddingApp = () => {
         </div>
       </section>
 
+      {/* Music Section */}
+      <section id="musica" className="py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Music className="w-8 h-8 text-wedding-gold mx-auto mb-6" />
+            <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">La nostra Playlist</h2>
+            <p className="text-wedding-ink/70 max-w-2xl mx-auto text-lg leading-relaxed">
+              La festa sarà ancora più bella con la vostra musica!<br />
+              Lasciate un suggerimento di una canzone che vi piacerebbe ascoltare e proveremo ad aggiungerla alla playlist.
+            </p>
+            <div className="mt-8">
+              <a 
+                href="#rsvp" 
+                className="inline-flex items-center gap-2 text-wedding-gold hover:text-wedding-gold/70 transition-colors font-medium border-b border-wedding-gold/30 pb-1"
+              >
+                Suggerisci una canzone nel modulo RSVP
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Gift Section */}
+      <section id="regalo" className="py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Gift className="w-8 h-8 text-wedding-gold mx-auto mb-6" />
+            <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">Lista Nozze</h2>
+            <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-wedding-gold/10 max-w-2xl mx-auto">
+              <p className="text-wedding-ink/70 mb-8 leading-relaxed italic">
+                "Il regalo più bello per noi sarà festeggiare questo giorno insieme a voi.<br />
+                Solo se lo desiderate, potete contribuire al nostro viaggio di nozze."
+              </p>
+              
+              <div className="space-y-4 text-left bg-wedding-cream/20 p-6 rounded-2xl border border-wedding-gold/5">
+                <div className="flex flex-col md:flex-row md:justify-between gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-wedding-ink/40">Intestatario</span>
+                  <span className="font-serif text-wedding-ink">Marianna Battaglia</span>
+                </div>
+                <div className="h-px bg-wedding-gold/10" />
+                <div className="flex flex-col md:flex-row md:justify-between gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-wedding-ink/40">IBAN</span>
+                  <span className="font-mono text-wedding-ink text-sm break-all">BE96 9670 2628 1205</span>
+                </div>
+                <div className="h-px bg-wedding-gold/10" />
+                <div className="flex flex-col md:flex-row md:justify-between gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-wedding-ink/40">BIC / SWIFT</span>
+                  <span className="font-mono text-wedding-ink text-sm">TRWIBEB1XXX</span>
+                </div>
+              </div>
+              <p className="mt-8 text-wedding-ink/60 text-sm italic">
+                Grazie per accompagnarci in questo nuovo capitolo della nostra vita.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* RSVP Section */}
       <section id="rsvp" className="py-24 px-6 relative text-wedding-ink">
         <div className="max-w-2xl mx-auto text-center">
@@ -784,7 +1069,7 @@ const WeddingApp = () => {
           >
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">Conferma la tua presenza</h2>
             <p className="text-wedding-ink/70 mb-10 font-light">
-              Vi preghiamo di confermare la vostra partecipazione entro il 30 Giugno 2026.
+              Vi preghiamo di confermare la vostra partecipazione entro il 4 Luglio 2026.
             </p>
 
             <AnimatePresence mode="wait">
@@ -815,18 +1100,6 @@ const WeddingApp = () => {
                 >
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Nome Completo</label>
-                      <input 
-                        required
-                        type="text" 
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
-                        placeholder="Es. Mario Rossi"
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Numero Ospiti</label>
                       <input 
                         required
@@ -839,20 +1112,71 @@ const WeddingApp = () => {
                         className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Parteciperai?</label>
+                      <select 
+                        name="attendance"
+                        value={formData.attendance}
+                        onChange={handleInputChange}
+                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
+                      >
+                        <option value="yes">Sì, con piacere</option>
+                        <option value="no">Purtroppo, non potrò esserci</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Nomi dei partecipanti</label>
+                    <div className="grid gap-4">
+                      {formData.guestNames.map((name, index) => (
+                        <div key={index} className="relative">
+                          <input 
+                            required
+                            type="text" 
+                            value={name}
+                            onChange={(e) => handleGuestNameChange(index, e.target.value)}
+                            className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                            placeholder={index === 0 ? "Il tuo nome completo" : `Nome ospite ${index + 1}`}
+                          />
+                          <Users className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2" />
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Parteciperai?</label>
+                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Hai intolleranze, allergie o esigenze alimentari (es. vegetariano/vegano)? *</label>
                     <select 
-                      name="attendance"
-                      value={formData.attendance}
+                      required
+                      name="hasIntolerances"
+                      value={formData.hasIntolerances}
                       onChange={handleInputChange}
                       className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
                     >
-                      <option value="yes">Sì, con piacere</option>
-                      <option value="no">Purtroppo, non potrò esserci</option>
+                      <option value="no">No</option>
+                      <option value="yes">Sì</option>
                     </select>
                   </div>
+
+                  {formData.hasIntolerances === 'yes' && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-2"
+                    >
+                      <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Dettagli (allergie, vegetariano, vegano, ecc.) *</label>
+                      <textarea 
+                        required={formData.hasIntolerances === 'yes'}
+                        name="intolerancesDetails"
+                        value={formData.intolerancesDetails}
+                        onChange={handleInputChange}
+                        rows={2}
+                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                        placeholder="Es. Celiachia, vegetariano, vegano, allergia alle noci..."
+                      />
+                    </motion.div>
+                  )}
 
                   <div className="space-y-2">
                     <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Messaggio (Opzionale)</label>
@@ -860,9 +1184,21 @@ const WeddingApp = () => {
                       name="message"
                       value={formData.message}
                       onChange={handleInputChange}
-                      rows={4}
+                      rows={3}
                       className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
-                      placeholder="Allergie, intolleranze o un semplice saluto..."
+                      placeholder="Richieste particolari o un semplice saluto..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Una canzone per noi (Opzionale)</label>
+                    <input 
+                      type="text" 
+                      name="song"
+                      value={formData.song}
+                      onChange={handleInputChange}
+                      className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                      placeholder="Es. Perfect - Ed Sheeran"
                     />
                   </div>
 
@@ -885,14 +1221,31 @@ const WeddingApp = () => {
 
       <footer className="py-12 bg-wedding-cream/50 text-center border-t border-wedding-gold/10">
         <p className="font-script text-3xl text-wedding-gold mb-4">Vitantonio & Marianna</p>
-        <p className="text-[10px] uppercase tracking-[0.3em] text-wedding-ink/40 mb-8">4 Ottobre 2026 • Varese</p>
-        <button 
-          onClick={() => setIsLoginModalOpen(true)}
-          className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-wedding-gold/40 hover:text-wedding-gold transition-colors"
-        >
-          <LayoutDashboard className="w-3 h-3" />
-          Area Riservata
-        </button>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-wedding-ink/40 mb-8">Domenica, 4 Ottobre 2026 • Noci (BA)</p>
+        <div className="flex justify-center gap-6">
+          <button 
+            onClick={() => {
+              if (isAuthenticated) {
+                setView('dashboard');
+              } else {
+                setIsLoginModalOpen(true);
+              }
+            }}
+            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-wedding-gold/40 hover:text-wedding-gold transition-colors"
+          >
+            <LayoutDashboard className="w-3 h-3" />
+            Area Riservata
+          </button>
+          {isAuthenticated && (
+            <button 
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-red-400/40 hover:text-red-400 transition-colors"
+            >
+              <LogOut className="w-3 h-3" />
+              Logout
+            </button>
+          )}
+        </div>
       </footer>
     </div>
   );

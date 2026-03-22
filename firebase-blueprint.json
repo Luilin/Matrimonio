@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "RSVP": {
+      "title": "RSVP",
+      "description": "Wedding RSVP response",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the guest"
+        },
+        "guests": {
+          "type": "integer",
+          "description": "Number of guests"
+        },
+        "guestNames": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of names for each guest"
+        },
+        "attendance": {
+          "type": "string",
+          "enum": ["yes", "no"],
+          "description": "Attendance status"
+        },
+        "message": {
+          "type": "string",
+          "description": "Optional message from the guest"
+        },
+        "song": {
+          "type": "string",
+          "description": "Suggested song for the playlist"
+        },
+        "hasIntolerances": {
+          "type": "string",
+          "enum": ["yes", "no"],
+          "description": "Whether the guest has intolerances"
+        },
+        "intolerancesDetails": {
+          "type": "string",
+          "description": "Details of the intolerances"
+        },
+        "adminNotes": {
+          "type": "string",
+          "description": "Private notes from the administrator"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the RSVP"
+        }
+      },
+      "required": ["name", "guests", "attendance", "created_at"]
+    }
+  },
+  "firestore": {
+    "rsvps": {
+      "schema": "RSVP",
+      "description": "Collection of wedding RSVPs"
+    }
+  }
+}
