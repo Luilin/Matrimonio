@@ -320,7 +320,7 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
                       )}
 
                       {rsvp.message && (
-                        <div className="bg-wedding-cream/50 p-4 rounded-2xl relative">
+                        <div className="bg-wedding-cream/20 p-4 rounded-2xl relative">
                           <MessageSquare className="w-4 h-4 text-wedding-gold/30 absolute -top-2 -left-2" />
                           <p className="text-sm italic text-wedding-ink/70">"{rsvp.message}"</p>
                         </div>
@@ -424,7 +424,6 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
       
       // Check if user is admin
       const adminEmails = [
-        'michelebattaglia.ing@gmail.com',
         'mariannabattaglia14@gmail.com',
         'loaderweb@gmail.com'
       ];
@@ -461,7 +460,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-wedding-gold/20 relative"
+        className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-wedding-gold/20 relative"
       >
         <button 
           onClick={onClose}
@@ -631,7 +630,6 @@ const WeddingApp = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       const adminEmails = [
-        'michelebattaglia.ing@gmail.com',
         'mariannabattaglia14@gmail.com',
         'loaderweb@gmail.com'
       ];
@@ -801,7 +799,7 @@ const WeddingApp = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden bg-white border-b border-wedding-gold/10 overflow-hidden shadow-2xl absolute top-full left-0 w-full"
+              className="md:hidden bg-white/90 backdrop-blur-lg border-b border-wedding-gold/10 overflow-hidden shadow-2xl absolute top-full left-0 w-full"
             >
               <div className="flex flex-col p-6 gap-1">
                 {navLinks.map((link) => (
@@ -870,7 +868,7 @@ const WeddingApp = () => {
           <h2 className="text-5xl md:text-7xl font-script mb-12 text-wedding-gold">Il Nostro Giorno</h2>
           
           <div className="grid md:grid-cols-2 gap-12 text-left">
-            <div className="space-y-6 p-8 rounded-3xl bg-white shadow-sm border border-wedding-gold/20 relative overflow-hidden">
+            <div className="space-y-6 p-8 rounded-3xl bg-white/60 shadow-sm border border-wedding-gold/20 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wedding-gold/20 via-wedding-gold/40 to-wedding-gold/20"></div>
               <div className="flex items-center gap-4 text-wedding-gold">
                 <Calendar className="w-6 h-6" />
@@ -892,7 +890,7 @@ const WeddingApp = () => {
               </ul>
             </div>
 
-            <div className="space-y-6 p-8 rounded-3xl bg-white shadow-sm border border-wedding-gold/20 relative overflow-hidden flex flex-col">
+            <div className="space-y-6 p-8 rounded-3xl bg-white/60 shadow-sm border border-wedding-gold/20 relative overflow-hidden flex flex-col">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wedding-gold/20 via-wedding-gold/40 to-wedding-gold/20"></div>
               <div className="flex items-center gap-4 text-wedding-gold">
                 <MapPin className="w-6 h-6" />
@@ -1029,7 +1027,7 @@ const WeddingApp = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="flex items-center justify-between p-4 md:p-6 bg-white rounded-3xl border border-wedding-gold/10 hover:border-wedding-gold/40 hover:shadow-md transition-all group overflow-hidden"
+              className="flex items-center justify-between p-4 md:p-6 bg-white/60 backdrop-blur-sm rounded-3xl border border-wedding-gold/10 hover:border-wedding-gold/40 hover:shadow-md transition-all group overflow-hidden"
             >
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden shrink-0">
@@ -1090,13 +1088,13 @@ const WeddingApp = () => {
           >
             <Gift className="w-8 h-8 text-wedding-gold mx-auto mb-6" />
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">Lista Nozze</h2>
-            <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-wedding-gold/10 max-w-2xl mx-auto">
+            <div className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-sm border border-wedding-gold/10 max-w-2xl mx-auto backdrop-blur-sm">
               <p className="text-wedding-ink/70 mb-8 leading-relaxed italic">
                 "Il regalo più bello per noi sarà festeggiare questo giorno insieme a voi.<br />
                 Solo se lo desiderate, potete contribuire al nostro viaggio di nozze."
               </p>
               
-              <div className="space-y-4 text-left bg-wedding-cream/20 p-6 rounded-2xl border border-wedding-gold/5">
+              <div className="space-y-4 text-left bg-wedding-cream/10 p-6 rounded-2xl border border-wedding-gold/5">
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-[10px] uppercase tracking-widest text-wedding-ink/40">Intestatario</span>
                   <span className="font-serif text-wedding-ink">Marianna Battaglia</span>
@@ -1127,7 +1125,7 @@ const WeddingApp = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl shadow-wedding-gold/5 border border-wedding-gold/20"
+            className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-xl shadow-wedding-gold/5 border border-wedding-gold/20 backdrop-blur-sm"
           >
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">Conferma la tua presenza</h2>
             <p className="text-wedding-ink/70 mb-10 font-light">
@@ -1281,7 +1279,7 @@ const WeddingApp = () => {
         </div>
       </section>
 
-      <footer className="py-12 bg-wedding-cream/50 text-center border-t border-wedding-gold/10">
+      <footer className="py-12 bg-wedding-cream/20 text-center border-t border-wedding-gold/10">
         <p className="font-script text-3xl text-wedding-gold mb-4">Vitantonio & Marianna</p>
         <p className="text-[10px] uppercase tracking-[0.3em] text-wedding-ink/40 mb-8">Domenica, 4 Ottobre 2026 • Noci (BA)</p>
         <div className="flex justify-center gap-6">
