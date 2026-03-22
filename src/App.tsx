@@ -25,7 +25,9 @@ import {
   Route,
   LogOut,
   Music,
-  Gift
+  Gift,
+  Mail,
+  Lock
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -47,7 +49,8 @@ import {
   GoogleAuthProvider, 
   onAuthStateChanged, 
   signOut,
-  User
+  User,
+  signInWithEmailAndPassword
 } from 'firebase/auth';
 
 interface RSVP {
@@ -406,23 +409,23 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
 const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: () => void, onLogin: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   if (!isOpen) return null;
 
-  const handleGoogleLogin = async () => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithEmailAndPassword(auth, email, password);
       const user = result.user;
       
       // Check if user is admin
-      // loaderweb@gmail.com is hardcoded as admin in rules, but we check here for UI
       if (user.email === 'loaderweb@gmail.com') {
         onLogin();
       } else {
-        // Optional: check Firestore for roles
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists() && userDoc.data().role === 'admin') {
           onLogin();
@@ -433,14 +436,12 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.code === 'auth/popup-blocked') {
-        setError('Il browser ha bloccato il popup. Per favore, abilita i popup per questo sito e riprova.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        setError('Login annullato. Riprova.');
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError('Dominio non autorizzato nelle impostazioni Firebase. Contatta l\'amministratore.');
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('Credenziali non valide. Riprova.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Troppi tentativi falliti. Riprova più tardi.');
       } else {
-        setError('Errore durante il login. Riprova.');
+        setError('Errore durante il login. Verifica i dati e riprova.');
       }
     } finally {
       setLoading(false);
@@ -452,48 +453,68 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean, onClose: ()
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-wedding-gold/20"
+        className="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-wedding-gold/20 relative"
       >
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 p-2 text-wedding-ink/20 hover:text-wedding-ink/40 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         <div className="text-center mb-8">
           <LayoutDashboard className="w-12 h-12 text-wedding-gold mx-auto mb-4" />
           <h3 className="text-3xl font-script text-wedding-gold">Area Riservata</h3>
-          <p className="text-wedding-ink/60 text-sm mt-2">Accedi con Google per visualizzare la dashboard</p>
+          <p className="text-wedding-ink/60 text-sm mt-2">Accedi per visualizzare la dashboard</p>
         </div>
 
-        <div className="space-y-6">
-          {error && (
-            <div className="bg-red-50 text-red-500 p-4 rounded-2xl text-xs text-center font-bold uppercase tracking-widest">
-              {error}
+        <form onSubmit={handleEmailLogin} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 ml-1 font-bold">Email</label>
+            <div className="relative">
+              <input 
+                required
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-wedding-cream/30 border border-wedding-gold/20 rounded-2xl px-4 py-3 pl-11 focus:outline-none focus:border-wedding-gold transition-all text-wedding-ink text-sm"
+                placeholder="admin@esempio.com"
+              />
+              <Mail className="w-4 h-4 text-wedding-gold/40 absolute left-4 top-1/2 -translate-y-1/2" />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 ml-1 font-bold">Password</label>
+            <div className="relative">
+              <input 
+                required
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-wedding-cream/30 border border-wedding-gold/20 rounded-2xl px-4 py-3 pl-11 focus:outline-none focus:border-wedding-gold transition-all text-wedding-ink text-sm"
+                placeholder="••••••••"
+              />
+              <Lock className="w-4 h-4 text-wedding-gold/40 absolute left-4 top-1/2 -translate-y-1/2" />
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-red-400 text-xs text-center bg-red-50 py-2 rounded-lg">{error}</p>
           )}
 
-          <div className="flex flex-col gap-3">
-            <button 
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="w-full bg-wedding-gold text-white font-bold py-4 rounded-2xl shadow-lg shadow-wedding-gold/20 hover:bg-wedding-gold/90 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2"
-            >
-              {loading ? 'Accesso in corso...' : (
-                <>
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.27.81-.57z" />
-                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  Accedi con Google
-                </>
-              )}
-            </button>
-            <button 
-              type="button"
-              onClick={onClose}
-              className="w-full text-wedding-ink/40 font-bold py-2 text-xs uppercase tracking-widest hover:text-wedding-ink/60 transition-colors"
-            >
-              Annulla
-            </button>
-          </div>
-        </div>
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full bg-wedding-gold hover:bg-wedding-gold/90 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all uppercase tracking-[0.2em] text-xs shadow-lg shadow-wedding-gold/20 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              'Accedi'
+            )}
+          </button>
+        </form>
       </motion.div>
     </div>
   );
