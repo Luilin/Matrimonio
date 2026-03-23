@@ -129,9 +129,9 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
     const data = filteredRsvps.map(r => ({
       [t.rsvp.fullName]: r.name,
       [t.rsvp.numGuests]: r.guests,
-      [t.rsvp.willAttend]: r.attendance === 'yes' ? t.rsvp.yes : t.rsvp.no,
+      [t.rsvp.willAttend]: r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
       [t.rsvp.message]: r.message,
-      [t.dashboard.dietary]: r.hasIntolerances === 'yes' ? `${t.rsvp.yes}: ${r.intolerancesDetails}` : t.rsvp.no,
+      [t.dashboard.dietary]: r.hasIntolerances === 'yes' ? `${t.rsvp.shortYes}: ${r.intolerancesDetails}` : t.rsvp.shortNo,
       [t.rsvp.song]: r.song || '-',
       [t.dashboard.date]: new Date(r.created_at).toLocaleDateString('it-IT')
     }));
@@ -152,9 +152,9 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
     const tableData = filteredRsvps.map(r => [
       r.name,
       r.guests.toString(),
-      r.attendance === 'yes' ? t.rsvp.yes : t.rsvp.no,
+      r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
       r.message || '-',
-      r.hasIntolerances === 'yes' ? `${t.rsvp.yes}: ${r.intolerancesDetails}` : t.rsvp.no,
+      r.hasIntolerances === 'yes' ? `${t.rsvp.shortYes}: ${r.intolerancesDetails}` : t.rsvp.shortNo,
       r.song || '-',
       new Date(r.created_at).toLocaleDateString('it-IT')
     ]);
@@ -586,6 +586,8 @@ const translations = {
       willAttend: 'Parteciperai?',
       yes: 'Sì, con piacere',
       no: 'Purtroppo, non potrò esserci',
+      shortYes: 'Si',
+      shortNo: 'No',
       guestNames: 'Nomi dei partecipanti',
       fullName: 'Il tuo nome completo',
       guestName: 'Nome ospite',
@@ -701,6 +703,8 @@ const translations = {
       willAttend: 'Will you attend?',
       yes: 'Yes, with pleasure',
       no: 'Unfortunately, I won\'t be able to make it',
+      shortYes: 'Yes',
+      shortNo: 'No',
       guestNames: 'Names of participants',
       fullName: 'Your full name',
       guestName: 'Guest name',
@@ -1415,8 +1419,8 @@ const WeddingApp = () => {
                         onChange={handleInputChange}
                         className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
                       >
-                        <option value="yes">{t.rsvp.yes}</option>
-                        <option value="no">{t.rsvp.no}</option>
+                        <option value="yes">{t.rsvp.shortYes}</option>
+                        <option value="no">{t.rsvp.shortNo}</option>
                       </select>
                     </div>
                   </div>
@@ -1449,8 +1453,8 @@ const WeddingApp = () => {
                       onChange={handleInputChange}
                       className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
                     >
-                      <option value="no">{t.rsvp.no}</option>
-                      <option value="yes">{t.rsvp.yes}</option>
+                      <option value="no">{t.rsvp.shortNo}</option>
+                      <option value="yes">{t.rsvp.shortYes}</option>
                     </select>
                   </div>
 
