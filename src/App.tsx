@@ -22,7 +22,6 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
-  Route,
   LogOut,
   Music,
   Gift,
@@ -322,7 +321,7 @@ const RSVPDashboard = ({ onBack }: { onBack: () => void }) => {
                       {rsvp.message && (
                         <div className="bg-wedding-cream/20 p-4 rounded-2xl relative">
                           <MessageSquare className="w-4 h-4 text-wedding-gold/30 absolute -top-2 -left-2" />
-                          <p className="text-sm italic text-wedding-ink/70">"{rsvp.message}"</p>
+                          <p className="text-xl italic text-wedding-ink/70">"{rsvp.message}"</p>
                         </div>
                       )}
 
@@ -683,21 +682,6 @@ const WeddingApp = () => {
     });
   };
 
-  const handleGetDirections = () => {
-    const destination = encodeURIComponent("Masseria Bonelli, SP 116km 10,400, 70015 Noci BA, Italy");
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        window.open(`https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${destination}&travelmode=driving`, '_blank');
-      }, (error) => {
-        console.error("Error getting location:", error);
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`, '_blank');
-      });
-    } else {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`, '_blank');
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRsvpStatus('submitting');
@@ -763,7 +747,7 @@ const WeddingApp = () => {
                 key={link.name}
                 href={link.href}
                 onClick={(e) => scrollToSection(e, link.href)}
-                className={`text-xs uppercase tracking-[0.2em] font-medium transition-all duration-300 relative group py-1 ${
+                className={`text-sm uppercase tracking-[0.2em] font-medium transition-all duration-300 relative group py-1 ${
                   activeSection === link.href
                     ? (scrolled ? 'text-wedding-gold' : 'text-white')
                     : (scrolled ? 'text-wedding-ink/70 hover:text-wedding-gold' : 'text-white/80 hover:text-white')
@@ -807,7 +791,7 @@ const WeddingApp = () => {
                     key={link.name}
                     href={link.href}
                     onClick={(e) => scrollToSection(e, link.href)}
-                    className={`text-sm uppercase tracking-[0.2em] font-medium py-5 px-4 transition-all duration-300 flex items-center justify-between rounded-xl ${
+                    className={`text-base uppercase tracking-[0.2em] font-medium py-5 px-4 transition-all duration-300 flex items-center justify-between rounded-xl ${
                       activeSection === link.href ? 'text-wedding-gold bg-wedding-gold/5' : 'text-wedding-ink/70 active:bg-wedding-gold/5'
                     }`}
                   >
@@ -839,10 +823,6 @@ const WeddingApp = () => {
             <h1 className="text-7xl md:text-9xl font-script mb-6">
               Vitantonio & Marianna
             </h1>
-            <div className="h-px w-24 bg-white/50 mx-auto mb-6" />
-            <p className="text-2xl md:text-3xl font-serif italic tracking-wide">
-              Domenica, 4 Ottobre 2026
-            </p>
           </motion.div>
           
           <motion.div 
@@ -872,17 +852,17 @@ const WeddingApp = () => {
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wedding-gold/20 via-wedding-gold/40 to-wedding-gold/20"></div>
               <div className="flex items-center gap-4 text-wedding-gold">
                 <Calendar className="w-6 h-6" />
-                <h3 className="text-xl font-serif font-semibold uppercase tracking-wider">Quando</h3>
+                <h3 className="text-2xl font-serif font-semibold uppercase tracking-wider">Quando</h3>
               </div>
-              <p className="text-lg leading-relaxed text-wedding-ink/80">
+              <p className="text-xl leading-relaxed text-wedding-ink/80">
                 Domenica, 4 Ottobre 2026<br />
                 Il rito civile si terrà alle ore 12:00 presso la medesima location
               </p>
               <div className="flex items-center gap-4 text-wedding-gold pt-4">
                 <Clock className="w-6 h-6" />
-                <h3 className="text-xl font-serif font-semibold uppercase tracking-wider">Programma</h3>
+                <h3 className="text-2xl font-serif font-semibold uppercase tracking-wider">Programma</h3>
               </div>
-              <ul className="space-y-2 text-wedding-ink/80">
+              <ul className="space-y-2 text-xl text-wedding-ink/80">
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 12:00 - Cerimonia Civile</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 13:30 - Aperitivo di Benvenuto</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> 15:00 - Pranzo di Nozze</li>
@@ -894,9 +874,9 @@ const WeddingApp = () => {
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wedding-gold/20 via-wedding-gold/40 to-wedding-gold/20"></div>
               <div className="flex items-center gap-4 text-wedding-gold">
                 <MapPin className="w-6 h-6" />
-                <h3 className="text-xl font-serif font-semibold uppercase tracking-wider">Dove</h3>
+                <h3 className="text-2xl font-serif font-semibold uppercase tracking-wider">Dove</h3>
               </div>
-              <p className="text-lg leading-relaxed text-wedding-ink/80">
+              <p className="text-xl leading-relaxed text-wedding-ink/80">
                 <strong>Masseria Bonelli</strong><br />
                 SP 116km 10,400<br />
                 70015 Noci (BA), Italia
@@ -927,13 +907,6 @@ const WeddingApp = () => {
                   <Navigation className="w-4 h-4" />
                   Apri in Google Maps
                 </a>
-                <button 
-                  onClick={handleGetDirections}
-                  className="inline-flex items-center gap-2 text-wedding-gold hover:text-wedding-gold/70 transition-colors font-medium bg-wedding-gold/5 px-4 py-2 rounded-full"
-                >
-                  <Route className="w-4 h-4" />
-                  Calcola Percorso
-                </button>
               </div>
             </div>
           </div>
@@ -959,14 +932,14 @@ const WeddingApp = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-wedding-sage/20">
               <h4 className="font-script text-2xl mb-3 text-wedding-gold">In Auto</h4>
-              <p className="text-sm text-wedding-ink/80 leading-relaxed">
+              <p className="text-base text-wedding-ink/80 leading-relaxed">
                 La Puglia è ancora più bella da vivere in macchina, quindi per chi viene da fuori consigliamo di avere un mezzo per godersi tutte le sue meraviglie.
                 L’aeroporto più vicino è Bari: da lì potete noleggiare un’auto, oppure arrivare direttamente in macchina da Roma.
               </p>
             </div>
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-wedding-sage/20">
               <h4 className="font-script text-2xl mb-3 text-wedding-gold">Servizio navetta</h4>
-              <p className="text-sm text-wedding-ink/80 leading-relaxed">
+              <p className="text-base text-wedding-ink/80 leading-relaxed">
                 Sarà disponibile una navetta per chi parte da Bisceglie, pensata per agevolare il rientro notturno e permettervi di godervi al massimo la giornata. La partenza è prevista da Bisceglie alle ore 10:30, mentre il rientro è programmato tra le 22:00 e le 23:00. 
                 Per favore fateci sapere se interessati al servizio navetta entro il 4 Luglio 2026.
               </p>
@@ -996,14 +969,14 @@ const WeddingApp = () => {
               name: "Masseria La Mandra", 
               dist: "Noci (BA)", 
               price: "€€€", 
-              link: "https://www.masserialamandra.it/", 
+              link: "https://www.masserialamandra.com/", 
               img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=60&w=400" 
             },
             { 
-              name: "Trulli Cibellis", 
+              name: "Trulli Cibelis", 
               dist: "Noci (BA)", 
               price: "€€", 
-              link: "https://www.trullicibellis.it/", 
+              link: "https://www.booking.com/hotel/it/trulli-cibelis.it.html", 
               img: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=60&w=400" 
             },
             { 
@@ -1017,7 +990,7 @@ const WeddingApp = () => {
               name: "Canto dei grilli", 
               dist: "Noci (BA)", 
               price: "€€", 
-              link: "https://www.cantodeigrilli.it/", 
+              link: "https://www.booking.com/hotel/it/wepuglia-canto-dei-grilli-noci.it.html", 
               img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=60&w=400" 
             }
           ].map((hotel, i) => (
@@ -1041,10 +1014,15 @@ const WeddingApp = () => {
                 </div>
                 <div>
                   <h4 className="font-serif text-lg md:text-xl group-hover:text-wedding-gold transition-colors">{hotel.name}</h4>
-                  <p className="text-xs md:text-sm text-wedding-ink/60">{hotel.dist} • {hotel.price}</p>
+                  <p className="text-sm md:text-base text-wedding-ink/60">{hotel.dist} • {hotel.price}</p>
                 </div>
               </div>
-              <a href={hotel.link} className="text-wedding-gold font-medium text-[10px] md:text-sm uppercase tracking-widest hover:underline bg-wedding-gold/5 px-3 md:px-4 py-2 rounded-full group-hover:bg-wedding-gold/10 transition-colors">
+              <a 
+                href={hotel.link} 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-wedding-gold font-medium text-sm md:text-base uppercase tracking-widest hover:underline bg-wedding-gold/5 px-3 md:px-4 py-2 rounded-full group-hover:bg-wedding-gold/10 transition-colors"
+              >
                 Prenota
               </a>
             </motion.div>
@@ -1096,21 +1074,21 @@ const WeddingApp = () => {
               
               <div className="space-y-4 text-left bg-wedding-cream/10 p-6 rounded-2xl border border-wedding-gold/5">
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-wedding-ink/40">Intestatario</span>
-                  <span className="font-serif text-wedding-ink">Marianna Battaglia</span>
+                  <span className="text-sm uppercase tracking-widest text-wedding-ink/40">Intestatario</span>
+                  <span className="font-serif text-wedding-ink text-lg">Marianna Battaglia</span>
                 </div>
                 <div className="h-px bg-wedding-gold/10" />
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-wedding-ink/40">IBAN</span>
-                  <span className="font-mono text-wedding-ink text-sm break-all">BE96 9670 2628 1205</span>
+                  <span className="text-sm uppercase tracking-widest text-wedding-ink/40">IBAN</span>
+                  <span className="font-mono text-wedding-ink text-lg break-all">BE96 9670 2628 1205</span>
                 </div>
                 <div className="h-px bg-wedding-gold/10" />
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-wedding-ink/40">BIC / SWIFT</span>
-                  <span className="font-mono text-wedding-ink text-sm">TRWIBEB1XXX</span>
+                  <span className="text-sm uppercase tracking-widest text-wedding-ink/40">BIC / SWIFT</span>
+                  <span className="font-mono text-wedding-ink text-lg">TRWIBEB1XXX</span>
                 </div>
               </div>
-              <p className="mt-8 text-wedding-ink/60 text-sm italic">
+              <p className="mt-8 text-wedding-ink/60 text-base italic">
                 Grazie per accompagnarci in questo nuovo capitolo della nostra vita.
               </p>
             </div>
@@ -1128,7 +1106,7 @@ const WeddingApp = () => {
             className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-xl shadow-wedding-gold/5 border border-wedding-gold/20 backdrop-blur-sm"
           >
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">Conferma la tua presenza</h2>
-            <p className="text-wedding-ink/70 mb-10 font-light">
+            <p className="text-wedding-ink/70 mb-10">
               Vi preghiamo di confermare la vostra partecipazione entro il 4 Luglio 2026.
             </p>
 
@@ -1160,20 +1138,21 @@ const WeddingApp = () => {
                 >
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Numero Ospiti</label>
-                      <input 
+                      <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Numero Ospiti</label>
+                      <select 
                         required
-                        type="number" 
-                        min="1"
-                        max="10"
                         name="guests"
                         value={formData.guests}
                         onChange={handleInputChange}
-                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
-                      />
+                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                          <option key={num} value={num}>{num}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Parteciperai?</label>
+                      <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Parteciperai?</label>
                       <select 
                         name="attendance"
                         value={formData.attendance}
@@ -1187,7 +1166,7 @@ const WeddingApp = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Nomi dei partecipanti</label>
+                    <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Nomi dei partecipanti</label>
                     <div className="grid gap-4">
                       {formData.guestNames.map((name, index) => (
                         <div key={index} className="relative">
@@ -1206,7 +1185,7 @@ const WeddingApp = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Hai intolleranze, allergie o esigenze alimentari (es. vegetariano/vegano)? *</label>
+                    <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Hai intolleranze, allergie o esigenze alimentari (es. vegetariano/vegano)? *</label>
                     <select 
                       required
                       name="hasIntolerances"
@@ -1225,7 +1204,7 @@ const WeddingApp = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       className="space-y-2"
                     >
-                      <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Dettagli (allergie, vegetariano, vegano, ecc.) *</label>
+                      <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Dettagli (allergie, vegetariano, vegano, ecc.) *</label>
                       <textarea 
                         required={formData.hasIntolerances === 'yes'}
                         name="intolerancesDetails"
@@ -1239,7 +1218,7 @@ const WeddingApp = () => {
                   )}
 
                   <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Messaggio (Opzionale)</label>
+                    <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Messaggio (Opzionale)</label>
                     <textarea 
                       name="message"
                       value={formData.message}
@@ -1251,7 +1230,7 @@ const WeddingApp = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Una canzone per noi (Opzionale)</label>
+                    <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">Una canzone per noi (Opzionale)</label>
                     <input 
                       type="text" 
                       name="song"
@@ -1264,7 +1243,7 @@ const WeddingApp = () => {
 
                   <button 
                     disabled={rsvpStatus === 'submitting'}
-                    className="w-full bg-wedding-gold hover:bg-wedding-gold/90 disabled:opacity-50 text-white font-semibold py-4 rounded-2xl transition-all uppercase tracking-[0.2em] text-sm mt-4 shadow-lg shadow-wedding-gold/20"
+                    className="w-full bg-wedding-gold hover:bg-wedding-gold/90 disabled:opacity-50 text-white font-semibold py-4 rounded-2xl transition-all uppercase tracking-[0.2em] text-base mt-4 shadow-lg shadow-wedding-gold/20"
                   >
                     {rsvpStatus === 'submitting' ? 'Invio in corso...' : 'Invia Conferma'}
                   </button>
