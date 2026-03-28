@@ -175,7 +175,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
   };
 
   return (
-    <div className="min-h-screen p-6 md:p-12">
+    <div className="min-h-screen p-6 md:p-12 font-roboto">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
           <div className="flex-1">
@@ -458,7 +458,7 @@ const LoginModal = ({ isOpen, onClose, onLogin, t }: { isOpen: boolean, onClose:
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm font-roboto">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -669,7 +669,7 @@ const translations = {
       title: 'Our Day',
       when: 'When',
       date: 'Sunday, October 4th 2026',
-      ceremony: 'The civil ceremony will be held at 12:00 PM at the same location',
+      ceremony: 'The civil ceremony will be held at 12:00 PM at the same location.',
       schedule: 'Schedule',
       event1: '12:00 PM - Civil Ceremony',
       event2: '1:30 PM - Welcome Drink',
