@@ -60,6 +60,8 @@ interface RSVP {
   name: string;
   guests: number;
   guestNames: string[];
+  guestDietary?: string[];
+  guestHasIntolerances?: string[];
   attendance: string;
   message: string;
   song?: string;
@@ -75,6 +77,8 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState<string>('');
   const [editGuestNames, setEditGuestNames] = useState<string[]>([]);
+  const [editGuestDietary, setEditGuestDietary] = useState<string[]>([]);
+  const [editGuestHasIntolerances, setEditGuestHasIntolerances] = useState<string[]>([]);
 
   const [exportOnlyAttending, setExportOnlyAttending] = useState(false);
 
@@ -113,6 +117,8 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
       await updateDoc(doc(db, 'rsvps', id), { 
         adminNotes: editNotes,
         guestNames: editGuestNames,
+        guestDietary: editGuestDietary,
+        guestHasIntolerances: editGuestHasIntolerances,
         name: editGuestNames[0] || '' // Update main name if first guest name changed
       });
       setEditingId(null);
@@ -129,15 +135,23 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
 
   const exportToExcel = () => {
     const filteredRsvps = exportOnlyAttending ? rsvps.filter(r => r.attendance === 'yes') : rsvps;
-    const data = filteredRsvps.map(r => ({
-      [t.rsvp.fullName]: r.name,
-      [t.rsvp.numGuests]: r.guests,
-      [t.rsvp.willAttend]: r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
-      [t.rsvp.message]: r.message,
-      [t.dashboard.dietary]: r.hasIntolerances === 'yes' ? `${t.rsvp.shortYes}: ${r.intolerancesDetails}` : t.rsvp.shortNo,
-      [t.rsvp.song]: r.song || '-',
-      [t.dashboard.date]: new Date(r.created_at).toLocaleDateString('it-IT')
-    }));
+    const data: any[] = [];
+    
+    filteredRsvps.forEach(r => {
+      const names = r.guestNames || [r.name];
+      const dietaries = r.guestDietary || [];
+      
+      names.forEach((name, idx) => {
+        data.push({
+          [t.rsvp.fullName]: name,
+          [t.rsvp.willAttend]: r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
+          [t.dashboard.dietary]: dietaries[idx] || (idx === 0 ? r.intolerancesDetails : '') || '-',
+          [t.rsvp.message]: r.message,
+          [t.rsvp.song]: r.song || '-',
+          [t.dashboard.date]: new Date(r.created_at).toLocaleDateString('it-IT')
+        });
+      });
+    });
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -152,18 +166,25 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
     const title = exportOnlyAttending ? t.dashboard.exportAttendingTitle : t.dashboard.exportTitle;
     doc.text(title, 14, 15);
     
-    const tableData = filteredRsvps.map(r => [
-      r.name,
-      r.guests.toString(),
-      r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
-      r.message || '-',
-      r.hasIntolerances === 'yes' ? `${t.rsvp.shortYes}: ${r.intolerancesDetails}` : t.rsvp.shortNo,
-      r.song || '-',
-      new Date(r.created_at).toLocaleDateString('it-IT')
-    ]);
+    const tableData: string[][] = [];
+    filteredRsvps.forEach(r => {
+      const names = r.guestNames || [r.name];
+      const dietaries = r.guestDietary || [];
+      
+      names.forEach((name, idx) => {
+        tableData.push([
+          name,
+          r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
+          dietaries[idx] || (idx === 0 ? r.intolerancesDetails : '') || '-',
+          r.message || '-',
+          r.song || '-',
+          new Date(r.created_at).toLocaleDateString('it-IT')
+        ]);
+      });
+    });
 
     autoTable(doc, {
-      head: [[t.rsvp.fullName, t.rsvp.numGuests, t.rsvp.willAttend, t.rsvp.message, t.dashboard.dietary, t.rsvp.song, t.dashboard.date]],
+      head: [[t.rsvp.fullName, t.rsvp.willAttend, t.dashboard.dietary, t.rsvp.message, t.rsvp.song, t.dashboard.date]],
       body: tableData,
       startY: 25,
       styles: { font: 'helvetica', fontSize: 10 },
@@ -280,6 +301,8 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
                             setEditingId(rsvp.id);
                             setEditNotes(rsvp.adminNotes || '');
                             setEditGuestNames(rsvp.guestNames || []);
+                            setEditGuestDietary(rsvp.guestDietary || (rsvp.guestNames || []).map(() => ''));
+                            setEditGuestHasIntolerances(rsvp.guestHasIntolerances || (rsvp.guestNames || []).map(() => 'no'));
                           }}
                           className="p-2 text-wedding-gold hover:bg-wedding-gold/10 rounded-full transition-colors"
                           title={t.dashboard.edit}
@@ -313,9 +336,15 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
                           <p className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2">{t.dashboard.guestNames}</p>
                           <div className="flex flex-wrap gap-2">
                             {rsvp.guestNames.map((name, idx) => (
-                              <span key={idx} className="bg-white px-3 py-1 rounded-full text-xs border border-wedding-gold/10">
-                                {name}
-                              </span>
+                              <div key={idx} className="flex flex-col gap-1 bg-white px-3 py-2 rounded-xl border border-wedding-gold/10">
+                                <span className="text-xs font-bold">{name}</span>
+                                {rsvp.guestDietary?.[idx] && (
+                                  <span className="text-[10px] text-red-500 italic flex items-center gap-1">
+                                    <Info className="w-2 h-2" />
+                                    {rsvp.guestDietary[idx]}
+                                  </span>
+                                )}
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -346,20 +375,74 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
                         <div className="mt-4 p-6 bg-wedding-cream/20 rounded-2xl border border-wedding-gold/20 space-y-4">
                           <div>
                             <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2 block font-bold">{t.dashboard.guestNames}</label>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {editGuestNames.map((name, idx) => (
-                                <input 
-                                  key={idx}
-                                  type="text"
-                                  value={name}
-                                  onChange={(e) => {
-                                    const newNames = [...editGuestNames];
-                                    newNames[idx] = e.target.value;
-                                    setEditGuestNames(newNames);
-                                  }}
-                                  className="w-full bg-white border border-wedding-gold/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-wedding-gold"
-                                  placeholder={`${t.rsvp.guestName} ${idx + 1}`}
-                                />
+                                <div key={idx} className="space-y-3 p-4 bg-white/50 rounded-2xl border border-wedding-gold/10">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 font-bold">{t.rsvp.guestName} {idx + 1}</label>
+                                    <input 
+                                      type="text" 
+                                      value={name}
+                                      onChange={(e) => {
+                                        const newNames = [...editGuestNames];
+                                        newNames[idx] = e.target.value;
+                                        setEditGuestNames(newNames);
+                                      }}
+                                      className="w-full bg-white border border-wedding-gold/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-wedding-gold"
+                                      placeholder={t.rsvp.guestName}
+                                    />
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 font-bold">{t.rsvp.hasDietary}</label>
+                                    <div className="flex gap-4">
+                                      <label className="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                          type="radio"
+                                          name={`edit-hasDietary-${idx}`}
+                                          value="no"
+                                          checked={editGuestHasIntolerances[idx] === 'no'}
+                                          onChange={() => {
+                                            const newHas = [...editGuestHasIntolerances];
+                                            newHas[idx] = 'no';
+                                            setEditGuestHasIntolerances(newHas);
+                                          }}
+                                          className="w-3 h-3 accent-wedding-gold"
+                                        />
+                                        <span className="text-xs text-wedding-ink/60">{t.rsvp.shortNo}</span>
+                                      </label>
+                                      <label className="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                          type="radio"
+                                          name={`edit-hasDietary-${idx}`}
+                                          value="yes"
+                                          checked={editGuestHasIntolerances[idx] === 'yes'}
+                                          onChange={() => {
+                                            const newHas = [...editGuestHasIntolerances];
+                                            newHas[idx] = 'yes';
+                                            setEditGuestHasIntolerances(newHas);
+                                          }}
+                                          className="w-3 h-3 accent-wedding-gold"
+                                        />
+                                        <span className="text-xs text-wedding-ink/60">{t.rsvp.shortYes}</span>
+                                      </label>
+                                    </div>
+                                    
+                                    {editGuestHasIntolerances[idx] === 'yes' && (
+                                      <input 
+                                        type="text" 
+                                        value={editGuestDietary[idx] || ''}
+                                        onChange={(e) => {
+                                          const newDietary = [...editGuestDietary];
+                                          newDietary[idx] = e.target.value;
+                                          setEditGuestDietary(newDietary);
+                                        }}
+                                        className="w-full bg-white border border-wedding-gold/20 rounded-xl px-4 py-2 text-[10px] focus:outline-none focus:border-wedding-gold italic"
+                                        placeholder={t.rsvp.dietaryPlaceholder}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           </div>
@@ -599,6 +682,7 @@ const translations = {
       guestNames: 'Nomi dei partecipanti',
       fullName: 'Il tuo nome completo',
       guestName: 'Nome ospite',
+      hasDietary: 'Hai intolleranze o allergie?',
       dietary: 'Hai intolleranze, allergie o esigenze alimentari (es. vegetariano/vegano)? *',
       dietaryDetails: 'Dettagli (allergie, vegetariano, vegano, ecc.) *',
       dietaryPlaceholder: 'Es. Celiachia, vegetariano, vegano, allergia alle noci...',
@@ -658,7 +742,7 @@ const translations = {
       suggestions: 'Suggestions',
       accommodation: 'Accommodation',
       music: 'Music',
-      registry: 'Registry',
+      registry: 'Wedding List',
       kids: 'Kids',
       rsvp: 'RSVP',
     },
@@ -701,7 +785,7 @@ const translations = {
       suggest: 'Suggest a song in the RSVP form',
     },
     gift: {
-      title: 'Wedding Registry',
+      title: 'Wedding List',
       quote: '"The most beautiful gift for us will be celebrating this day together with you. Only if you wish, you can contribute to our honeymoon."',
       holder: 'Account Holder',
       thanks: 'Thank you for accompanying us in this new chapter of our life.',
@@ -721,6 +805,7 @@ const translations = {
       guestNames: 'Names of participants',
       fullName: 'Your full name',
       guestName: 'Guest name',
+      hasDietary: 'Do you have any dietary requirements?',
       dietary: 'Do you have any intolerances, allergies or dietary requirements (e.g. vegetarian/vegan)? *',
       dietaryDetails: 'Details (allergies, vegetarian, vegan, etc.) *',
       dietaryPlaceholder: 'E.g. Celiac, vegetarian, vegan, nut allergy...',
@@ -790,6 +875,8 @@ const WeddingApp = () => {
     name: '',
     guests: 1,
     guestNames: [''],
+    guestDietary: [''],
+    guestHasIntolerances: ['no'],
     attendance: 'yes',
     message: '',
     song: '',
@@ -908,14 +995,26 @@ const WeddingApp = () => {
       const numGuests = parseInt(value, 10) || 1;
       setFormData(prev => {
         const newGuestNames = [...prev.guestNames];
+        const newGuestDietary = [...(prev.guestDietary || [])];
+        const newGuestHasIntolerances = [...(prev.guestHasIntolerances || [])];
         if (numGuests > prev.guestNames.length) {
           for (let i = prev.guestNames.length; i < numGuests; i++) {
             newGuestNames.push('');
+            newGuestDietary.push('');
+            newGuestHasIntolerances.push('no');
           }
         } else if (numGuests < prev.guestNames.length) {
           newGuestNames.splice(numGuests);
+          newGuestDietary.splice(numGuests);
+          newGuestHasIntolerances.splice(numGuests);
         }
-        return { ...prev, guests: numGuests, guestNames: newGuestNames };
+        return { 
+          ...prev, 
+          guests: numGuests, 
+          guestNames: newGuestNames, 
+          guestDietary: newGuestDietary,
+          guestHasIntolerances: newGuestHasIntolerances
+        };
       });
     } else {
       setFormData(prev => ({ ...prev, [name]: finalValue }));
@@ -932,6 +1031,22 @@ const WeddingApp = () => {
         guestNames: newGuestNames,
         name: index === 0 ? value : prev.name
       };
+    });
+  };
+
+  const handleGuestDietaryChange = (index: number, value: string) => {
+    setFormData(prev => {
+      const newGuestDietary = [...(prev.guestDietary || [])];
+      newGuestDietary[index] = value;
+      return { ...prev, guestDietary: newGuestDietary };
+    });
+  };
+
+  const handleGuestHasIntolerancesChange = (index: number, value: string) => {
+    setFormData(prev => {
+      const newGuestHasIntolerances = [...(prev.guestHasIntolerances || [])];
+      newGuestHasIntolerances[index] = value;
+      return { ...prev, guestHasIntolerances: newGuestHasIntolerances };
     });
   };
 
@@ -1115,7 +1230,7 @@ const WeddingApp = () => {
       </section>
 
       {/* Details Section */}
-      <section id="dettagli" className="py-24 px-6 max-w-4xl mx-auto text-center">
+      <section id="dettagli" className="py-8 px-6 max-w-4xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1192,7 +1307,7 @@ const WeddingApp = () => {
       </section>
 
       {/* Directions Section */}
-      <section id="arrivare" className="py-24 px-6 relative">
+      <section id="arrivare" className="py-8 px-6 relative">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1225,7 +1340,7 @@ const WeddingApp = () => {
       </section>
 
       {/* Accommodations Section */}
-      <section id="pernottamento" className="py-24 px-6 max-w-4xl mx-auto">
+      <section id="pernottamento" className="py-8 px-6 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1253,7 +1368,7 @@ const WeddingApp = () => {
               dist: "Noci (BA)", 
               price: "€€", 
               link: "https://www.booking.com/hotel/it/le-bianche.html", 
-              icon: <Building2 className="w-6 h-6 text-wedding-gold" />
+              icon: <Home className="w-6 h-6 text-wedding-gold" />
             },
             { 
               name: "Otto Trulli Apulian Country House", 
@@ -1274,7 +1389,7 @@ const WeddingApp = () => {
               dist: "Tra Noci ed Alberobello", 
               price: "€-€€", 
               link: "https://www.airbnb.it/s/Noci--BA--Italia/homes", 
-              img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Airbnb_Logo_B%C3%A9lo.svg/512px-Airbnb_Logo_B%C3%A9lo.svg.png" 
+              icon: <Home className="w-6 h-6 text-wedding-gold" />
             }
           ].map((hotel, i) => (
             <motion.div 
@@ -1287,17 +1402,7 @@ const WeddingApp = () => {
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-wedding-gold/5 group-hover:bg-wedding-gold/10 transition-colors">
-                  {hotel.icon ? (
-                    hotel.icon
-                  ) : (
-                    <img 
-                      src={hotel.img} 
-                      alt={hotel.name} 
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500"
-                    />
-                  )}
+                  {hotel.icon}
                 </div>
                 <div>
                   <h4 className="font-serif text-lg md:text-xl group-hover:text-wedding-gold transition-colors">{hotel.name}</h4>
@@ -1318,7 +1423,7 @@ const WeddingApp = () => {
       </section>
       
       {/* Kids Section */}
-      <section id="bambini" className="py-24 px-6">
+      <section id="bambini" className="py-8 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1337,7 +1442,7 @@ const WeddingApp = () => {
       </section>
 
       {/* Music Section */}
-      <section id="musica" className="py-24 px-6">
+      <section id="musica" className="py-8 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1362,7 +1467,7 @@ const WeddingApp = () => {
       </section>
 
       {/* Gift Section */}
-      <section id="regalo" className="py-24 px-6">
+      <section id="regalo" className="py-8 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1401,7 +1506,7 @@ const WeddingApp = () => {
       </section>
 
       {/* RSVP Section */}
-      <section id="rsvp" className="py-24 px-6 relative text-wedding-ink">
+      <section id="rsvp" className="py-8 px-6 relative text-wedding-ink">
         <div className="max-w-2xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -1471,55 +1576,85 @@ const WeddingApp = () => {
 
                   <div className="space-y-4">
                     <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.guestNames}</label>
-                    <div className="grid gap-4">
+                    <div className="grid gap-6">
                       {formData.guestNames.map((name, index) => (
-                        <div key={index} className="relative">
-                          <input 
-                            required
-                            type="text" 
-                            value={name}
-                            onChange={(e) => handleGuestNameChange(index, e.target.value)}
-                            className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
-                            placeholder={index === 0 ? t.rsvp.fullName : `${t.rsvp.guestName} ${index + 1}`}
-                          />
-                          <Users className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2" />
+                        <div key={index} className="space-y-4 p-5 bg-wedding-gold/5 rounded-3xl border border-wedding-gold/10">
+                          <div className="space-y-2">
+                            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 ml-1 font-bold">
+                              {index === 0 ? t.rsvp.fullName : `${t.rsvp.guestName} ${index + 1}`}
+                            </label>
+                            <div className="relative">
+                              <input 
+                                required
+                                type="text" 
+                                value={name}
+                                onChange={(e) => handleGuestNameChange(index, e.target.value)}
+                                className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                                placeholder={t.rsvp.fullName}
+                              />
+                              <Users className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2" />
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 ml-1 font-bold">
+                              {t.rsvp.hasDietary}
+                            </label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className="relative flex items-center justify-center">
+                                  <input 
+                                    type="radio"
+                                    name={`hasDietary-${index}`}
+                                    value="no"
+                                    checked={formData.guestHasIntolerances[index] === 'no'}
+                                    onChange={() => handleGuestHasIntolerancesChange(index, 'no')}
+                                    className="peer sr-only"
+                                  />
+                                  <div className="w-5 h-5 border-2 border-wedding-gold/30 rounded-full peer-checked:border-wedding-gold transition-all" />
+                                  <div className="w-2.5 h-2.5 bg-wedding-gold rounded-full absolute opacity-0 peer-checked:opacity-100 transition-all" />
+                                </div>
+                                <span className="text-sm text-wedding-ink/70 group-hover:text-wedding-ink transition-colors">{t.rsvp.shortNo}</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className="relative flex items-center justify-center">
+                                  <input 
+                                    type="radio"
+                                    name={`hasDietary-${index}`}
+                                    value="yes"
+                                    checked={formData.guestHasIntolerances[index] === 'yes'}
+                                    onChange={() => handleGuestHasIntolerancesChange(index, 'yes')}
+                                    className="peer sr-only"
+                                  />
+                                  <div className="w-5 h-5 border-2 border-wedding-gold/30 rounded-full peer-checked:border-wedding-gold transition-all" />
+                                  <div className="w-2.5 h-2.5 bg-wedding-gold rounded-full absolute opacity-0 peer-checked:opacity-100 transition-all" />
+                                </div>
+                                <span className="text-sm text-wedding-ink/70 group-hover:text-wedding-ink transition-colors">{t.rsvp.shortYes}</span>
+                              </label>
+                            </div>
+
+                            {formData.guestHasIntolerances[index] === 'yes' && (
+                              <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="relative pt-2"
+                              >
+                                <input 
+                                  required={formData.guestHasIntolerances[index] === 'yes'}
+                                  type="text" 
+                                  value={formData.guestDietary[index] || ''}
+                                  onChange={(e) => handleGuestDietaryChange(index, e.target.value)}
+                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm"
+                                  placeholder={t.rsvp.dietaryPlaceholder}
+                                />
+                                <Info className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2 mt-1" />
+                              </motion.div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.dietary}</label>
-                    <select 
-                      required
-                      name="hasIntolerances"
-                      value={formData.hasIntolerances}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
-                    >
-                      <option value="no">{t.rsvp.shortNo}</option>
-                      <option value="yes">{t.rsvp.shortYes}</option>
-                    </select>
-                  </div>
-
-                  {formData.hasIntolerances === 'yes' && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="space-y-2"
-                    >
-                      <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.dietaryDetails}</label>
-                      <textarea 
-                        required={formData.hasIntolerances === 'yes'}
-                        name="intolerancesDetails"
-                        value={formData.intolerancesDetails}
-                        onChange={handleInputChange}
-                        rows={2}
-                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
-                        placeholder={t.rsvp.dietaryPlaceholder}
-                      />
-                    </motion.div>
-                  )}
 
                   <div className="space-y-2">
                     <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.message}</label>
