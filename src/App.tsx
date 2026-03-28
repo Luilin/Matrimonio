@@ -162,7 +162,11 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
 
   const exportToPDF = () => {
     const filteredRsvps = exportOnlyAttending ? rsvps.filter(r => r.attendance === 'yes') : rsvps;
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
     const title = exportOnlyAttending ? t.dashboard.exportAttendingTitle : t.dashboard.exportTitle;
     doc.text(title, 14, 15);
     
