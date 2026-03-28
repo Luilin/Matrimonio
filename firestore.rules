@@ -11,10 +11,12 @@ service cloud.firestore {
     //   - name: string (required, 1-100 chars)
     //   - guests: number (required, 1-10)
     //   - guestNames: list (required)
+    //   - guestDietary: list (optional)
+    //   - guestHasIntolerances: list (optional)
     //   - attendance: string (required, 'yes' or 'no')
     //   - message: string (optional, 0-1000 chars)
     //   - song: string (optional, 0-200 chars)
-    //   - hasIntolerances: string (required, 'yes' or 'no')
+    //   - hasIntolerances: string (optional, 'yes' or 'no')
     //   - intolerancesDetails: string (optional, 0-500 chars)
     //   - adminNotes: string (optional, 0-1000 chars)
     //   - created_at: string (required, ISO 8601 format)
@@ -37,18 +39,19 @@ service cloud.firestore {
     }
 
     function isValidRSVP(data) {
-      return data.keys().hasAll(['name', 'guests', 'guestNames', 'attendance', 'hasIntolerances', 'created_at']) &&
-             data.keys().hasOnly(['name', 'guests', 'guestNames', 'attendance', 'message', 'song', 'hasIntolerances', 'intolerancesDetails', 'adminNotes', 'created_at']) &&
+      return data.keys().hasAll(['name', 'guests', 'guestNames', 'attendance', 'created_at']) &&
+             data.keys().hasOnly(['name', 'guests', 'guestNames', 'guestDietary', 'guestHasIntolerances', 'attendance', 'message', 'song', 'hasIntolerances', 'intolerancesDetails', 'adminNotes', 'created_at']) &&
              data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
              data.guests is int && data.guests >= 1 && data.guests <= 10 &&
              data.guestNames is list && data.guestNames.size() == data.guests &&
              data.attendance in ['yes', 'no'] &&
-             data.hasIntolerances in ['yes', 'no'] &&
+             (!('guestDietary' in data) || (data.guestDietary is list && data.guestDietary.size() == data.guests)) &&
+             (!('guestHasIntolerances' in data) || (data.guestHasIntolerances is list && data.guestHasIntolerances.size() == data.guests)) &&
+             (!('hasIntolerances' in data) || (data.hasIntolerances in ['yes', 'no'])) &&
              (!('message' in data) || (data.message is string && data.message.size() <= 1000)) &&
              (!('song' in data) || (data.song is string && data.song.size() <= 200)) &&
              (!('intolerancesDetails' in data) || (data.intolerancesDetails is string && data.intolerancesDetails.size() <= 500)) &&
              (!('adminNotes' in data) || (data.adminNotes is string && data.adminNotes.size() <= 1000)) &&
-             (data.hasIntolerances == 'no' || ('intolerancesDetails' in data && data.intolerancesDetails.size() > 0)) &&
              data.created_at is string; // Simplified date check for now
     }
 

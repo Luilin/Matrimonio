@@ -18,6 +18,16 @@
           "items": { "type": "string" },
           "description": "List of names for each guest"
         },
+        "guestDietary": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of dietary requirements for each guest"
+        },
+        "guestHasIntolerances": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of whether each guest has intolerances"
+        },
         "attendance": {
           "type": "string",
           "enum": ["yes", "no"],
