@@ -26,7 +26,10 @@ import {
   Music,
   Gift,
   Mail,
-  Lock
+  Lock,
+  Baby,
+  Home,
+  Building2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -534,6 +537,7 @@ const translations = {
       accommodation: 'Pernottamento',
       music: 'Musica',
       registry: 'Lista Nozze',
+      kids: 'Bambini',
       rsvp: 'RSVP',
     },
     hero: {
@@ -543,7 +547,7 @@ const translations = {
       title: 'Il Nostro Giorno',
       when: 'Quando',
       date: 'Domenica, 4 Ottobre 2026',
-      ceremony: 'Il rito civile si terrà alle ore 12:00 presso la medesima location',
+      ceremony: 'Il rito civile si terrà alle ore 12:00 presso la medesima location.',
       schedule: 'Programma',
       event1: '12:00 - Cerimonia Civile',
       event2: '13:30 - Aperitivo di Benvenuto',
@@ -556,7 +560,7 @@ const translations = {
       title: 'Suggerimenti per arrivare',
       description: 'La Masseria è facilmente raggiungibile in auto. È disponibile un ampio parcheggio riservato agli ospiti.',
       byCar: 'In Auto',
-      byCarDesc: 'La Puglia è ancora più bella da vivere in macchina, quindi per chi viene da fuori consigliamo di avere un mezzo per godersi tutte le sue meraviglie. L’aeroporto più vicino è Bari: da lì potete noleggiare un’auto, oppure arrivare direttamente in macchina da Roma.',
+      byCarDesc: 'La Puglia è una terra che si apprezza ancora di più on the road: per questo, a chi arriva da fuori consigliamo di avere un’auto, così da poter esplorare in libertà tutte le sue meraviglie.\n\nPer chi parte da Londra, l’aeroporto più comodo è Bari: una volta arrivati, è possibile noleggiare un’auto direttamente lì. In alternativa, per chi viene da Roma, si può scegliere di raggiungere la Puglia in macchina e godersi il viaggio, entrando gradualmente nel paesaggio e nella natura che caratterizzano questa regione.',
       shuttle: 'Servizio navetta',
       shuttleDesc: 'Sarà disponibile una navetta per chi parte da Bisceglie, pensata per agevolare il rientro notturno e permettervi di godervi al massimo la giornata. La partenza è prevista da Bisceglie alle ore 10:30, mentre il rientro è programmato tra le 22:00 e le 23:00. Per favore fateci sapere se interessati al servizio navetta entro il 4 Luglio 2026.',
     },
@@ -564,6 +568,10 @@ const translations = {
       title: 'Dove Pernottare',
       description: 'Per chi desidera fermarsi per la notte o più giorni, abbiamo selezionato alcune strutture nelle vicinanze.',
       book: 'Prenota',
+    },
+    kids: {
+      title: 'Per i più piccoli',
+      description: 'Abbiamo organizzato un servizio di babysitting dedicato ai più piccoli, così che anche loro possano divertirsi e giocare insieme.',
     },
     music: {
       title: 'La nostra Playlist',
@@ -651,6 +659,7 @@ const translations = {
       accommodation: 'Accommodation',
       music: 'Music',
       registry: 'Registry',
+      kids: 'Kids',
       rsvp: 'RSVP',
     },
     hero: {
@@ -673,7 +682,7 @@ const translations = {
       title: 'Arrival Suggestions',
       description: 'The Masseria is easily accessible by car. A large private parking lot is available for guests.',
       byCar: 'By Car',
-      byCarDesc: 'Puglia is even more beautiful to experience by car, so for those coming from outside we recommend having a vehicle to enjoy all its wonders. The nearest airport is Bari: from there you can rent a car, or arrive directly by car from Rome.',
+      byCarDesc: 'Puglia is a land that is appreciated even more on the road: for this reason, we recommend those coming from outside to have a car, so they can freely explore all its wonders.\n\nFor those departing from London, the most convenient airport is Bari: once you arrive, you can rent a car directly there. Alternatively, for those coming from Rome, you can choose to reach Puglia by car and enjoy the journey, gradually entering the landscape and nature that characterize this region.',
       shuttle: 'Shuttle service',
       shuttleDesc: 'A shuttle will be available for those departing from Bisceglie, designed to facilitate the night return and allow you to enjoy the day to the fullest. Departure is scheduled from Bisceglie at 10:30 AM, while the return is scheduled between 10:00 PM and 11:00 PM. Please let us know if you are interested in the shuttle service by July 4th, 2026.',
     },
@@ -681,6 +690,10 @@ const translations = {
       title: 'Where to Stay',
       description: 'For those who wish to stay for the night or several days, we have selected some nearby accommodations.',
       book: 'Book',
+    },
+    kids: {
+      title: 'For the little ones',
+      description: 'We have organized a babysitting service dedicated to the little ones, so that they too can have fun and play together.',
     },
     music: {
       title: 'Our Playlist',
@@ -800,6 +813,7 @@ const WeddingApp = () => {
     { name: 'Dettagli', key: 'details', href: '#dettagli' },
     { name: 'Suggerimenti', key: 'suggestions', href: '#arrivare' },
     { name: 'Pernottamento', key: 'accommodation', href: '#pernottamento' },
+    { name: 'Bambini', key: 'kids', href: '#bambini' },
     { name: 'Musica', key: 'music', href: '#musica' },
     { name: 'Lista Nozze', key: 'registry', href: '#regalo' },
     { name: 'RSVP', key: 'rsvp', href: '#rsvp' },
@@ -1143,7 +1157,7 @@ const WeddingApp = () => {
               <p className="text-xl leading-relaxed text-wedding-ink/80">
                 <strong>Masseria Bonelli</strong><br />
                 SP 116km 10,400<br />
-                70015 Noci (BA), Italia
+                70015 Noci (BA), Puglia, Italia
               </p>
               
               {/* Interactive Map */}
@@ -1232,28 +1246,35 @@ const WeddingApp = () => {
               dist: "Noci (BA)", 
               price: "€€€", 
               link: "https://www.masserialamandra.com/", 
-              img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=60&w=400" 
+              icon: <Home className="w-6 h-6 text-wedding-gold" />
             },
             { 
-              name: "Trulli Cibelis", 
+              name: "B&B Le Bianche", 
               dist: "Noci (BA)", 
               price: "€€", 
-              link: "https://www.booking.com/hotel/it/trulli-cibelis.it.html", 
-              img: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=60&w=400" 
+              link: "https://www.booking.com/hotel/it/le-bianche.html", 
+              icon: <Building2 className="w-6 h-6 text-wedding-gold" />
+            },
+            { 
+              name: "Otto Trulli Apulian Country House", 
+              dist: "Noci (BA)", 
+              price: "€€€", 
+              link: "https://www.booking.com/hotel/it/otto-trulli-apulian-country-house.html", 
+              icon: <Home className="w-6 h-6 text-wedding-gold" />
+            },
+            { 
+              name: "Il Trullo delle Due Lune", 
+              dist: "Noci (BA)", 
+              price: "€€", 
+              link: "https://www.booking.com/hotel/it/il-trullo-delle-due-lune.html", 
+              icon: <Home className="w-6 h-6 text-wedding-gold" />
             },
             { 
               name: "Airbnb", 
               dist: "Tra Noci ed Alberobello", 
               price: "€-€€", 
               link: "https://www.airbnb.it/s/Noci--BA--Italia/homes", 
-              img: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=60&w=400" 
-            },
-            { 
-              name: "Canto dei grilli", 
-              dist: "Noci (BA)", 
-              price: "€€", 
-              link: "https://www.booking.com/hotel/it/wepuglia-canto-dei-grilli-noci.it.html", 
-              img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=60&w=400" 
+              img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Airbnb_Logo_B%C3%A9lo.svg/512px-Airbnb_Logo_B%C3%A9lo.svg.png" 
             }
           ].map((hotel, i) => (
             <motion.div 
@@ -1265,14 +1286,18 @@ const WeddingApp = () => {
               className="flex items-center justify-between p-4 md:p-6 bg-white/60 backdrop-blur-sm rounded-3xl border border-wedding-gold/10 hover:border-wedding-gold/40 hover:shadow-md transition-all group overflow-hidden"
             >
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden shrink-0">
-                  <img 
-                    src={hotel.img} 
-                    alt={hotel.name} 
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-wedding-gold/5 group-hover:bg-wedding-gold/10 transition-colors">
+                  {hotel.icon ? (
+                    hotel.icon
+                  ) : (
+                    <img 
+                      src={hotel.img} 
+                      alt={hotel.name} 
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500"
+                    />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-serif text-lg md:text-xl group-hover:text-wedding-gold transition-colors">{hotel.name}</h4>
@@ -1289,6 +1314,25 @@ const WeddingApp = () => {
               </a>
             </motion.div>
           ))}
+        </div>
+      </section>
+      
+      {/* Kids Section */}
+      <section id="bambini" className="py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Baby className="w-10 h-10 text-wedding-gold mx-auto mb-6" />
+            <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">{t.kids.title}</h2>
+            <div className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-sm border border-wedding-gold/10 max-w-2xl mx-auto backdrop-blur-sm">
+              <p className="text-wedding-ink/70 text-lg leading-relaxed italic">
+                {t.kids.description}
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1335,7 +1379,7 @@ const WeddingApp = () => {
               <div className="space-y-4 text-left bg-wedding-cream/10 p-6 rounded-2xl border border-wedding-gold/5">
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-sm uppercase tracking-widest text-wedding-ink/40">{t.gift.holder}</span>
-                  <span className="font-serif text-wedding-ink text-sm">Marianna Battaglia</span>
+                  <span className="font-serif text-wedding-ink text-base">Marianna Battaglia</span>
                 </div>
                 <div className="h-px bg-wedding-gold/10" />
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">

@@ -13,6 +13,12 @@ const dbPath = process.env.NODE_ENV === "production"
   ? path.join(__dirname, "data", "wedding.db") 
   : path.join(__dirname, "wedding.db");
 
+// Ensure directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
 console.log(`Database path: ${dbPath}`);
 
 const db = new Database(dbPath);
