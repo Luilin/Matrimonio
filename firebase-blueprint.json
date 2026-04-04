@@ -28,6 +28,10 @@
           "items": { "type": "string" },
           "description": "List of whether each guest has intolerances"
         },
+        "children": {
+          "type": "string",
+          "description": "Number of children"
+        },
         "attendance": {
           "type": "string",
           "enum": ["yes", "no"],

@@ -13,6 +13,7 @@ service cloud.firestore {
     //   - guestNames: list (required)
     //   - guestDietary: list (optional)
     //   - guestHasIntolerances: list (optional)
+    //   - children: string (optional)
     //   - attendance: string (required, 'yes' or 'no')
     //   - message: string (optional, 0-1000 chars)
     //   - song: string (optional, 0-200 chars)
@@ -40,11 +41,12 @@ service cloud.firestore {
 
     function isValidRSVP(data) {
       return data.keys().hasAll(['name', 'guests', 'guestNames', 'attendance', 'created_at']) &&
-             data.keys().hasOnly(['name', 'guests', 'guestNames', 'guestDietary', 'guestHasIntolerances', 'attendance', 'message', 'song', 'hasIntolerances', 'intolerancesDetails', 'adminNotes', 'created_at']) &&
+             data.keys().hasOnly(['name', 'guests', 'guestNames', 'guestDietary', 'guestHasIntolerances', 'children', 'attendance', 'message', 'song', 'hasIntolerances', 'intolerancesDetails', 'adminNotes', 'created_at']) &&
              data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
              data.guests is int && data.guests >= 1 && data.guests <= 10 &&
              data.guestNames is list && data.guestNames.size() == data.guests &&
              data.attendance in ['yes', 'no'] &&
+             (!('children' in data) || (data.children is string)) &&
              (!('guestDietary' in data) || (data.guestDietary is list && data.guestDietary.size() == data.guests)) &&
              (!('guestHasIntolerances' in data) || (data.guestHasIntolerances is list && data.guestHasIntolerances.size() == data.guests)) &&
              (!('hasIntolerances' in data) || (data.hasIntolerances in ['yes', 'no'])) &&

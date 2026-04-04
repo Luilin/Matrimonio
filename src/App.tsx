@@ -62,6 +62,7 @@ interface RSVP {
   guestNames: string[];
   guestDietary?: string[];
   guestHasIntolerances?: string[];
+  children?: string;
   attendance: string;
   message: string;
   song?: string;
@@ -79,6 +80,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
   const [editGuestNames, setEditGuestNames] = useState<string[]>([]);
   const [editGuestDietary, setEditGuestDietary] = useState<string[]>([]);
   const [editGuestHasIntolerances, setEditGuestHasIntolerances] = useState<string[]>([]);
+  const [editChildren, setEditChildren] = useState<string>('no');
 
   const [exportOnlyAttending, setExportOnlyAttending] = useState(false);
 
@@ -119,6 +121,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
         guestNames: editGuestNames,
         guestDietary: editGuestDietary,
         guestHasIntolerances: editGuestHasIntolerances,
+        children: editChildren,
         name: editGuestNames[0] || '' // Update main name if first guest name changed
       });
       setEditingId(null);
@@ -144,6 +147,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
       names.forEach((name, idx) => {
         data.push({
           [t.rsvp.fullName]: name,
+          [t.rsvp.numChildren]: r.children === 'no' ? '0' : r.children,
           [t.rsvp.willAttend]: r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
           [t.dashboard.dietary]: dietaries[idx] || (idx === 0 ? r.intolerancesDetails : '') || '-',
           [t.rsvp.message]: r.message,
@@ -178,6 +182,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
       names.forEach((name, idx) => {
         tableData.push([
           name,
+          r.children === 'no' ? '0' : (r.children || '0'),
           r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
           dietaries[idx] || (idx === 0 ? r.intolerancesDetails : '') || '-',
           r.message || '-',
@@ -188,7 +193,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
     });
 
     autoTable(doc, {
-      head: [[t.rsvp.fullName, t.rsvp.willAttend, t.dashboard.dietary, t.rsvp.message, t.rsvp.song, t.dashboard.date]],
+      head: [[t.rsvp.fullName, t.rsvp.numChildren, t.rsvp.willAttend, t.dashboard.dietary, t.rsvp.message, t.rsvp.song, t.dashboard.date]],
       body: tableData,
       startY: 25,
       styles: { font: 'helvetica', fontSize: 10 },
@@ -307,6 +312,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
                             setEditGuestNames(rsvp.guestNames || []);
                             setEditGuestDietary(rsvp.guestDietary || (rsvp.guestNames || []).map(() => ''));
                             setEditGuestHasIntolerances(rsvp.guestHasIntolerances || (rsvp.guestNames || []).map(() => 'no'));
+                            setEditChildren(rsvp.children || 'no');
                           }}
                           className="p-2 text-wedding-gold hover:bg-wedding-gold/10 rounded-full transition-colors"
                           title={t.dashboard.edit}
@@ -451,15 +457,30 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
                             </div>
                           </div>
 
-                          <div>
-                            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2 block font-bold">{t.dashboard.adminNotes}</label>
-                            <textarea 
-                              value={editNotes}
-                              onChange={(e) => setEditNotes(e.target.value)}
-                              className="w-full bg-white border border-wedding-gold/20 rounded-xl p-3 text-sm focus:outline-none focus:border-wedding-gold"
-                              rows={3}
-                              placeholder="..."
-                            />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2 block font-bold">{t.rsvp.numChildren}</label>
+                              <select 
+                                value={editChildren}
+                                onChange={(e) => setEditChildren(e.target.value)}
+                                className="w-full bg-white border border-wedding-gold/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-wedding-gold"
+                              >
+                                <option value="no">{t.rsvp.noChildren}</option>
+                                {[1, 2, 3, 4, 5].map(num => (
+                                  <option key={num} value={num.toString()}>{num}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 mb-2 block font-bold">{t.dashboard.adminNotes}</label>
+                              <textarea 
+                                value={editNotes}
+                                onChange={(e) => setEditNotes(e.target.value)}
+                                className="w-full bg-white border border-wedding-gold/20 rounded-xl p-3 text-sm focus:outline-none focus:border-wedding-gold"
+                                rows={1}
+                                placeholder="..."
+                              />
+                            </div>
                           </div>
 
                           <div className="flex justify-end gap-2 pt-2">
@@ -638,7 +659,7 @@ const translations = {
       schedule: 'Programma',
       event1: '12:00 - Cerimonia Civile',
       event2: '13:30 - Aperitivo di Benvenuto',
-      event3: '15:00 - Pranzo di Nozze',
+      event3: '15:00 - Pranzo',
       event4: '18:00 - Taglio della Torta & Party',
       where: 'Dove',
       openMaps: 'Apri in Google Maps',
@@ -667,7 +688,7 @@ const translations = {
     },
     gift: {
       title: 'Lista Nozze',
-      quote: '"Il regalo più bello per noi sarà festeggiare questo giorno insieme a voi. Solo se lo desiderate, potete contribuire al nostro viaggio di nozze."',
+      quote: 'Il regalo più bello per noi sarà festeggiare questo giorno insieme a voi. Solo se lo desiderate, potete contribuire al nostro viaggio di nozze.',
       holder: 'Intestatario',
       thanks: 'Grazie per accompagnarci in questo nuovo capitolo della nostra vita.',
     },
@@ -683,6 +704,8 @@ const translations = {
       no: 'Purtroppo, non potrò esserci',
       shortYes: 'Si',
       shortNo: 'No',
+      numChildren: 'Bambini',
+      noChildren: 'No',
       guestNames: 'Nomi dei partecipanti',
       fullName: 'Il tuo nome completo',
       guestName: 'Nome ospite',
@@ -761,7 +784,7 @@ const translations = {
       schedule: 'Schedule',
       event1: '12:00 PM - Civil Ceremony',
       event2: '1:30 PM - Welcome Drink',
-      event3: '3:00 PM - Wedding Lunch',
+      event3: '3:00 PM - Lunch',
       event4: '6:00 PM - Cake Cutting & Party',
       where: 'Where',
       openMaps: 'Open in Google Maps',
@@ -790,7 +813,7 @@ const translations = {
     },
     gift: {
       title: 'Wedding List',
-      quote: '"The most beautiful gift for us will be celebrating this day together with you. Only if you wish, you can contribute to our honeymoon."',
+      quote: 'The most beautiful gift for us will be celebrating this day together with you. Only if you wish, you can contribute to our honeymoon.',
       holder: 'Account Holder',
       thanks: 'Thank you for accompanying us in this new chapter of our life.',
     },
@@ -806,6 +829,8 @@ const translations = {
       no: 'Unfortunately, I won\'t be able to make it',
       shortYes: 'Yes',
       shortNo: 'No',
+      numChildren: 'Children',
+      noChildren: 'No',
       guestNames: 'Names of participants',
       fullName: 'Your full name',
       guestName: 'Guest name',
@@ -881,6 +906,7 @@ const WeddingApp = () => {
     guestNames: [''],
     guestDietary: [''],
     guestHasIntolerances: ['no'],
+    children: 'no',
     attendance: 'yes',
     message: '',
     song: '',
@@ -1549,7 +1575,7 @@ const WeddingApp = () => {
                   onSubmit={handleSubmit} 
                   className="space-y-6 text-left"
                 >
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.numGuests}</label>
                       <select 
@@ -1561,6 +1587,20 @@ const WeddingApp = () => {
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                           <option key={num} value={num}>{num}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.numChildren}</label>
+                      <select 
+                        name="children"
+                        value={formData.children}
+                        onChange={handleInputChange}
+                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
+                      >
+                        <option value="no">{t.rsvp.noChildren}</option>
+                        {[1, 2, 3, 4, 5].map(num => (
+                          <option key={num} value={num.toString()}>{num}</option>
                         ))}
                       </select>
                     </div>
