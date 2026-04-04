@@ -134,6 +134,10 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
     .filter(r => r.attendance === 'yes')
     .reduce((acc, curr) => acc + curr.guests, 0);
 
+  const totalChildrenAttending = rsvps
+    .filter(r => r.attendance === 'yes' && r.children && r.children !== 'no')
+    .reduce((acc, curr) => acc + parseInt(curr.children || '0'), 0);
+
   const totalResponses = rsvps.length;
 
   const exportToExcel = () => {
@@ -147,7 +151,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
       names.forEach((name, idx) => {
         data.push({
           [t.rsvp.fullName]: name,
-          [t.rsvp.numChildren]: r.children === 'no' ? '0' : r.children,
+          [t.rsvp.numChildren]: idx === 0 ? (r.children === 'no' ? '0' : r.children) : '-',
           [t.rsvp.willAttend]: r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
           [t.dashboard.dietary]: dietaries[idx] || (idx === 0 ? r.intolerancesDetails : '') || '-',
           [t.rsvp.message]: r.message,
@@ -182,7 +186,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
       names.forEach((name, idx) => {
         tableData.push([
           name,
-          r.children === 'no' ? '0' : (r.children || '0'),
+          idx === 0 ? (r.children === 'no' ? '0' : (r.children || '0')) : '-',
           r.attendance === 'yes' ? t.rsvp.shortYes : t.rsvp.shortNo,
           dietaries[idx] || (idx === 0 ? r.intolerancesDetails : '') || '-',
           r.message || '-',
@@ -250,7 +254,7 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
               </button>
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-wedding-gold/10 flex items-center gap-4">
                 <div className="bg-wedding-gold/10 p-3 rounded-xl">
                   <Users className="w-6 h-6 text-wedding-gold" />
@@ -258,6 +262,15 @@ const RSVPDashboard = ({ onBack, t }: { onBack: () => void, t: any }) => {
                 <div>
                   <p className="text-xs uppercase tracking-widest text-wedding-ink/40">{t.dashboard.totalGuests}</p>
                   <p className="text-2xl font-serif font-bold">{totalAttending}</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-wedding-gold/10 flex items-center gap-4">
+                <div className="bg-wedding-sage/10 p-3 rounded-xl">
+                  <Baby className="w-6 h-6 text-wedding-sage" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-wedding-ink/40">{t.dashboard.totalChildren}</p>
+                  <p className="text-2xl font-serif font-bold">{totalChildrenAttending}</p>
                 </div>
               </div>
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-wedding-gold/10 flex items-center gap-4">
@@ -729,6 +742,7 @@ const translations = {
       title: 'Dashboard Partecipazioni',
       onlyAttending: 'Solo Presenti',
       totalGuests: 'Totale Ospiti',
+      totalChildren: 'Totale Bambini',
       responses: 'Risposte',
       noResponses: 'Nessuna risposta ricevuta finora.',
       present: 'Presente',
@@ -854,6 +868,7 @@ const translations = {
       title: 'RSVP Dashboard',
       onlyAttending: 'Attending Only',
       totalGuests: 'Total Guests',
+      totalChildren: 'Total Children',
       responses: 'Responses',
       noResponses: 'No responses received yet.',
       present: 'Attending',
@@ -1575,7 +1590,7 @@ const WeddingApp = () => {
                   onSubmit={handleSubmit} 
                   className="space-y-6 text-left"
                 >
-                  <div className="grid md:grid-cols-3 gap-6">
+                  <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.numGuests}</label>
                       <select 
@@ -1587,20 +1602,6 @@ const WeddingApp = () => {
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                           <option key={num} value={num}>{num}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm uppercase tracking-widest text-wedding-ink/70 ml-1 font-bold">{t.rsvp.numChildren}</label>
-                      <select 
-                        name="children"
-                        value={formData.children}
-                        onChange={handleInputChange}
-                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
-                      >
-                        <option value="no">{t.rsvp.noChildren}</option>
-                        {[1, 2, 3, 4, 5].map(num => (
-                          <option key={num} value={num.toString()}>{num}</option>
                         ))}
                       </select>
                     </div>
@@ -1623,21 +1624,40 @@ const WeddingApp = () => {
                     <div className="grid gap-6">
                       {formData.guestNames.map((name, index) => (
                         <div key={index} className="space-y-4 p-5 bg-wedding-gold/5 rounded-3xl border border-wedding-gold/10">
-                          <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 ml-1 font-bold">
-                              {index === 0 ? t.rsvp.fullName : `${t.rsvp.guestName} ${index + 1}`}
-                            </label>
-                            <div className="relative">
-                              <input 
-                                required
-                                type="text" 
-                                value={name}
-                                onChange={(e) => handleGuestNameChange(index, e.target.value)}
-                                className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
-                                placeholder={t.rsvp.fullName}
-                              />
-                              <Users className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2" />
+                          <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 ml-1 font-bold">
+                                {index === 0 ? t.rsvp.fullName : `${t.rsvp.guestName} ${index + 1}`}
+                              </label>
+                              <div className="relative">
+                                <input 
+                                  required
+                                  type="text" 
+                                  value={name}
+                                  onChange={(e) => handleGuestNameChange(index, e.target.value)}
+                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                                  placeholder={t.rsvp.fullName}
+                                />
+                                <Users className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2" />
+                              </div>
                             </div>
+
+                            {index === 0 && (
+                              <div className="space-y-2">
+                                <label className="text-[10px] uppercase tracking-widest text-wedding-ink/40 ml-1 font-bold">{t.rsvp.numChildren}</label>
+                                <select 
+                                  name="children"
+                                  value={formData.children}
+                                  onChange={handleInputChange}
+                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
+                                >
+                                  <option value="no">{t.rsvp.noChildren}</option>
+                                  {[1, 2, 3, 4, 5].map(num => (
+                                    <option key={num} value={num.toString()}>{num}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                           </div>
 
                           <div className="space-y-3">
