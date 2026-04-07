@@ -1547,7 +1547,7 @@ const WeddingApp = () => {
                   <span className="text-wedding-ink text-sm">TRWIBEB1XXX</span>
                 </div>
               </div>
-              <p className="mt-8 text-wedding-ink/60 text-base italic">
+              <p className="mt-8 text-wedding-ink/60 text-2xl italic">
                 {t.gift.thanks}
               </p>
             </div>
