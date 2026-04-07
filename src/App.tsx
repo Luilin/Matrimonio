@@ -1565,7 +1565,7 @@ const WeddingApp = () => {
             className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-xl shadow-wedding-gold/5 border border-wedding-gold/20 backdrop-blur-sm"
           >
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">{t.rsvp.title}</h2>
-            <p className="text-wedding-ink/70 mb-10">
+            <p className="text-wedding-ink/70 mb-10 leading-relaxed italic font-sans text-2xl">
               {t.rsvp.deadline}
             </p>
 
