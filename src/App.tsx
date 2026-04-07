@@ -673,7 +673,8 @@ const translations = {
       event1: '12:00 - Cerimonia Civile',
       event2: '13:30 - Aperitivo di Benvenuto',
       event3: '15:00 - Pranzo',
-      event4: '18:00 - Taglio della Torta & Party',
+      event4: '18:00 - Taglio della Torta',
+      event5: '19:00 - After Party',
       where: 'Dove',
       openMaps: 'Apri in Google Maps',
     },
@@ -701,7 +702,7 @@ const translations = {
     },
     gift: {
       title: 'Lista Nozze',
-      quote: 'Il regalo più bello per noi sarà festeggiare questo giorno insieme a voi. Solo se lo desiderate, potete contribuire al nostro viaggio di nozze.',
+      quote: 'La vostra presenza è per noi il regalo più grande. Se però desiderate farci un dono, potete contribuire al nostro viaggio di nozze, che sarà un ricordo speciale per tutta la vita.',
       holder: 'Intestatario',
       thanks: 'Grazie per accompagnarci in questo nuovo capitolo della nostra vita.',
     },
@@ -799,7 +800,8 @@ const translations = {
       event1: '12:00 PM - Civil Ceremony',
       event2: '1:30 PM - Welcome Drink',
       event3: '3:00 PM - Lunch',
-      event4: '6:00 PM - Cake Cutting & Party',
+      event4: '6:00 PM - Cake Cutting',
+      event5: '7:00 PM - After Party',
       where: 'Where',
       openMaps: 'Open in Google Maps',
     },
@@ -827,7 +829,7 @@ const translations = {
     },
     gift: {
       title: 'Wedding List',
-      quote: 'The most beautiful gift for us will be celebrating this day together with you. Only if you wish, you can contribute to our honeymoon.',
+      quote: 'Your presence is the greatest gift for us. If you wish to give us a gift, you can contribute to our honeymoon, which will be a special memory for a lifetime.',
       holder: 'Account Holder',
       thanks: 'Thank you for accompanying us in this new chapter of our life.',
     },
@@ -1305,6 +1307,7 @@ const WeddingApp = () => {
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> {t.details.event2}</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> {t.details.event3}</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> {t.details.event4}</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-wedding-gold/50"></div> {t.details.event5}</li>
               </ul>
             </div>
 
