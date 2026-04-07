@@ -1402,7 +1402,7 @@ const WeddingApp = () => {
           </p>
         </motion.div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 font-roboto">
           {[
             { 
               name: "Masseria La Mandra", 
@@ -1453,7 +1453,7 @@ const WeddingApp = () => {
                   {hotel.icon}
                 </div>
                 <div>
-                  <h4 className="font-serif text-lg md:text-xl group-hover:text-wedding-gold transition-colors">{hotel.name}</h4>
+                  <h4 className="text-lg md:text-xl group-hover:text-wedding-gold transition-colors font-bold">{hotel.name}</h4>
                   <p className="text-sm md:text-base text-wedding-ink/60">{hotel.dist} • {hotel.price}</p>
                 </div>
               </div>
@@ -1461,7 +1461,7 @@ const WeddingApp = () => {
                 href={hotel.link} 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-wedding-gold font-medium text-sm md:text-base uppercase tracking-widest hover:underline bg-wedding-gold/5 px-3 md:px-4 py-2 rounded-full group-hover:bg-wedding-gold/10 transition-colors"
+                className="text-wedding-gold font-bold text-sm md:text-base uppercase tracking-widest hover:underline bg-wedding-gold/5 px-3 md:px-4 py-2 rounded-full group-hover:bg-wedding-gold/10 transition-colors"
               >
                 {t.accommodations.book}
               </a>
