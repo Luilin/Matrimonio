@@ -1603,7 +1603,7 @@ const WeddingApp = () => {
                         name="guests"
                         value={formData.guests}
                         onChange={handleInputChange}
-                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
+                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm appearance-none"
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                           <option key={num} value={num}>{num}</option>
@@ -1616,7 +1616,7 @@ const WeddingApp = () => {
                         name="attendance"
                         value={formData.attendance}
                         onChange={handleInputChange}
-                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
+                        className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm appearance-none"
                       >
                         <option value="yes">{t.rsvp.shortYes}</option>
                         <option value="no">{t.rsvp.shortNo}</option>
@@ -1640,7 +1640,7 @@ const WeddingApp = () => {
                                   type="text" 
                                   value={name}
                                   onChange={(e) => handleGuestNameChange(index, e.target.value)}
-                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm"
                                   placeholder={t.rsvp.fullName}
                                 />
                                 <Users className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2" />
@@ -1654,7 +1654,7 @@ const WeddingApp = () => {
                                   name="children"
                                   value={formData.children}
                                   onChange={handleInputChange}
-                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink appearance-none"
+                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm appearance-none"
                                 >
                                   <option value="no">{t.rsvp.noChildren}</option>
                                   {[1, 2, 3, 4, 5].map(num => (
@@ -1713,7 +1713,7 @@ const WeddingApp = () => {
                                   type="text" 
                                   value={formData.guestDietary[index] || ''}
                                   onChange={(e) => handleGuestDietaryChange(index, e.target.value)}
-                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm"
+                                  className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-xs"
                                   placeholder={t.rsvp.dietaryPlaceholder}
                                 />
                                 <Info className="w-4 h-4 text-wedding-gold/30 absolute right-4 top-1/2 -translate-y-1/2 mt-1" />
@@ -1732,7 +1732,7 @@ const WeddingApp = () => {
                       value={formData.message}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                      className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm"
                       placeholder={t.rsvp.messagePlaceholder}
                     />
                   </div>
@@ -1744,7 +1744,7 @@ const WeddingApp = () => {
                       name="song"
                       value={formData.song}
                       onChange={handleInputChange}
-                      className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink"
+                      className="w-full bg-white/80 border border-wedding-gold/30 rounded-2xl px-4 py-3 focus:outline-none focus:border-wedding-gold focus:ring-2 focus:ring-wedding-gold/20 transition-all text-wedding-ink text-sm"
                       placeholder={t.rsvp.songPlaceholder}
                     />
                   </div>
