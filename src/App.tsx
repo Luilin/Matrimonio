@@ -1768,7 +1768,7 @@ const WeddingApp = () => {
 
       <footer className="py-12 bg-wedding-cream/20 text-center border-t border-wedding-gold/10">
         <p className="font-script text-3xl text-wedding-gold mb-4">{t.hero.title}</p>
-        <p className="text-[10px] uppercase tracking-[0.3em] text-wedding-ink/40 mb-8">{t.details.date} • Noci (BA)</p>
+        <p className="font-roboto text-[10px] uppercase tracking-[0.3em] text-wedding-ink/40 mb-8">{t.details.date} • Noci (BA)</p>
         <div className="flex justify-center gap-6">
           <button 
             onClick={() => {
@@ -1778,7 +1778,7 @@ const WeddingApp = () => {
                 setIsLoginModalOpen(true);
               }
             }}
-            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-wedding-gold/40 hover:text-wedding-gold transition-colors"
+            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-wedding-gold/40 hover:text-wedding-gold transition-colors font-roboto"
           >
             <LayoutDashboard className="w-3 h-3" />
             {t.footer.admin}
