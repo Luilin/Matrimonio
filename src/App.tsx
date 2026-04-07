@@ -1141,7 +1141,7 @@ const WeddingApp = () => {
       />
       {/* Navigation */}
       <nav 
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 font-roboto ${
           (scrolled || isMenuOpen) ? 'bg-white/95 backdrop-blur-md py-4 shadow-md' : 'bg-transparent py-6'
         }`}
       >
@@ -1373,13 +1373,13 @@ const WeddingApp = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-wedding-sage/20">
               <h4 className="font-script text-2xl mb-3 text-wedding-gold">{t.directions.byCar}</h4>
-              <p className="text-base text-wedding-ink/80 leading-relaxed">
+              <p className="text-lg text-wedding-ink/80 leading-relaxed">
                 {t.directions.byCarDesc}
               </p>
             </div>
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-wedding-sage/20">
               <h4 className="font-script text-2xl mb-3 text-wedding-gold">{t.directions.shuttle}</h4>
-              <p className="text-base text-wedding-ink/80 leading-relaxed">
+              <p className="text-lg text-wedding-ink/80 leading-relaxed">
                 {t.directions.shuttleDesc}
               </p>
             </div>
@@ -1499,16 +1499,18 @@ const WeddingApp = () => {
           >
             <Music className="w-8 h-8 text-wedding-gold mx-auto mb-6" />
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">{t.music.title}</h2>
-            <p className="text-wedding-ink/70 max-w-2xl mx-auto text-lg leading-relaxed">
-              {t.music.description}
-            </p>
-            <div className="mt-8">
-              <a 
-                href="#rsvp" 
-                className="inline-flex items-center gap-2 text-wedding-gold hover:text-wedding-gold/70 transition-colors font-medium border-b border-wedding-gold/30 pb-1"
-              >
-                {t.music.suggest}
-              </a>
+            <div className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-sm border border-wedding-gold/10 max-w-2xl mx-auto backdrop-blur-sm">
+              <p className="text-wedding-ink/70 text-lg leading-relaxed">
+                {t.music.description}
+              </p>
+              <div className="mt-8">
+                <a 
+                  href="#rsvp" 
+                  className="inline-flex items-center gap-2 text-wedding-gold hover:text-wedding-gold/70 transition-colors font-medium border-b border-wedding-gold/30 pb-1"
+                >
+                  {t.music.suggest}
+                </a>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -1529,20 +1531,20 @@ const WeddingApp = () => {
                 {t.gift.quote}
               </p>
               
-              <div className="space-y-4 text-left bg-wedding-cream/10 p-6 rounded-2xl border border-wedding-gold/5">
+              <div className="space-y-4 text-left bg-wedding-cream/10 p-6 rounded-2xl border border-wedding-gold/5 font-roboto">
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-sm uppercase tracking-widest text-wedding-ink/40">{t.gift.holder}</span>
-                  <span className="font-serif text-wedding-ink text-base">Marianna Battaglia</span>
+                  <span className="text-wedding-ink text-base">Marianna Battaglia</span>
                 </div>
                 <div className="h-px bg-wedding-gold/10" />
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-sm uppercase tracking-widest text-wedding-ink/40">IBAN</span>
-                  <span className="font-mono text-wedding-ink text-sm break-all">BE96 9670 2628 1205</span>
+                  <span className="text-wedding-ink text-sm break-all">BE96 9670 2628 1205</span>
                 </div>
                 <div className="h-px bg-wedding-gold/10" />
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-sm uppercase tracking-widest text-wedding-ink/40">BIC / SWIFT</span>
-                  <span className="font-mono text-wedding-ink text-sm">TRWIBEB1XXX</span>
+                  <span className="text-wedding-ink text-sm">TRWIBEB1XXX</span>
                 </div>
               </div>
               <p className="mt-8 text-wedding-ink/60 text-base italic">
@@ -1554,7 +1556,7 @@ const WeddingApp = () => {
       </section>
 
       {/* RSVP Section */}
-      <section id="rsvp" className="py-8 px-6 relative text-wedding-ink">
+      <section id="rsvp" className="py-8 px-6 relative text-wedding-ink font-roboto">
         <div className="max-w-2xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

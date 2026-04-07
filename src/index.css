@@ -3,9 +3,10 @@
 
 @theme {
   --font-serif: "Cormorant Garamond", serif;
-  --font-sans: "MonteCarlo", cursive;
+  --font-sans: "Great Vibes", cursive;
   --font-script: "Great Vibes", cursive;
   --font-roboto: "Roboto", sans-serif;
+  --font-montecarlo: "MonteCarlo", cursive;
   
   --color-wedding-cream: #f5f0e6; /* Light Beige base */
   --color-wedding-gold: #5a7a61; /* Darker Sage Green for better contrast on pink */
