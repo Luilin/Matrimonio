@@ -1481,7 +1481,7 @@ const WeddingApp = () => {
             <Baby className="w-10 h-10 text-wedding-gold mx-auto mb-6" />
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">{t.kids.title}</h2>
             <div className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-sm border border-wedding-gold/10 max-w-2xl mx-auto backdrop-blur-sm">
-              <p className="text-wedding-ink/70 text-lg leading-relaxed italic">
+              <p className="text-wedding-ink/70 leading-relaxed italic">
                 {t.kids.description}
               </p>
             </div>
@@ -1500,7 +1500,7 @@ const WeddingApp = () => {
             <Music className="w-8 h-8 text-wedding-gold mx-auto mb-6" />
             <h2 className="text-5xl md:text-6xl font-script mb-6 text-wedding-gold">{t.music.title}</h2>
             <div className="bg-white/60 p-8 md:p-12 rounded-[3rem] shadow-sm border border-wedding-gold/10 max-w-2xl mx-auto backdrop-blur-sm">
-              <p className="text-wedding-ink/70 text-lg leading-relaxed">
+              <p className="text-wedding-ink/70 leading-relaxed">
                 {t.music.description}
               </p>
               <div className="mt-8">
@@ -1578,7 +1578,7 @@ const WeddingApp = () => {
                 >
                   <CheckCircle2 className="w-16 h-16 text-wedding-sage mx-auto mb-6" />
                   <h3 className="text-3xl font-script mb-2 text-wedding-gold">{t.rsvp.successTitle}</h3>
-                  <p className="text-wedding-ink/70">{t.rsvp.successDesc}</p>
+                  <p className="text-wedding-ink/70 text-3xl font-script">{t.rsvp.successDesc}</p>
                   <button 
                     onClick={() => setRsvpStatus('idle')}
                     className="mt-8 text-sm uppercase tracking-widest text-wedding-sage hover:text-wedding-sage/70 transition-colors font-bold"
