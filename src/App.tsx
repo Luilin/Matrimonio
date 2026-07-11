@@ -1534,17 +1534,27 @@ const WeddingApp = () => {
               <div className="space-y-4 text-left bg-wedding-cream/10 p-6 rounded-2xl border border-wedding-gold/5 font-roboto">
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-sm uppercase tracking-widest text-wedding-ink/40">{t.gift.holder}</span>
-                  <span className="text-wedding-ink text-base">Marianna Battaglia</span>
+                  <span className="text-wedding-ink text-base">Vitantonio Tritto & Marianna Battaglia</span>
                 </div>
                 <div className="h-px bg-wedding-gold/10" />
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-sm uppercase tracking-widest text-wedding-ink/40">IBAN</span>
-                  <span className="text-wedding-ink text-sm break-all">BE96 9670 2628 1205</span>
+                  <span className="text-wedding-ink text-sm break-all">GB79 REVO 2301 6310 4890 58</span>
                 </div>
                 <div className="h-px bg-wedding-gold/10" />
                 <div className="flex flex-col md:flex-row md:justify-between gap-1">
                   <span className="text-sm uppercase tracking-widest text-wedding-ink/40">BIC / SWIFT</span>
-                  <span className="text-wedding-ink text-sm">TRWIBEB1XXX</span>
+                  <span className="text-wedding-ink text-sm">REVOGB21</span>
+                </div>
+                <div className="h-px bg-wedding-gold/10" />
+                <div className="flex flex-col md:flex-row md:justify-between gap-1">
+                  <span className="text-sm uppercase tracking-widest text-wedding-ink/40">Correspondent BIC</span>
+                  <span className="text-wedding-ink text-sm">CHASGB2L</span>
+                </div>
+                <div className="h-px bg-wedding-gold/10" />
+                <div className="flex flex-col md:flex-row md:justify-between gap-1">
+                  <span className="text-sm uppercase tracking-widest text-wedding-ink/40">Address</span>
+                  <span className="text-wedding-ink text-sm md:text-right">Revolut Ltd<br />30 South Colonnade, E14 5HX, London, United Kingdom</span>
                 </div>
               </div>
               <p className="mt-8 text-wedding-ink/60 text-2xl italic">
